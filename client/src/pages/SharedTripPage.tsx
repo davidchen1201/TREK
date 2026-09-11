@@ -83,9 +83,8 @@ function placeTime(place: any): string | null {
   return start ? `${start}${end ? ` – ${end}` : ''}` : null;
 }
 
-function FitBoundsToPlaces({ places, framedOnMount }: { places: any[]; framedOnMount: boolean }) {
+function FitBoundsToPlaces({ places }: { places: any[] }) {
   const map = useMap();
-  const fitRan = useRef(false);
   // The page rebuilds this array on every render (a Page body may not memoise), so
   // keying the effect on the coordinates rather than the array identity is what stops
   // an unrelated re-render - the language picker, a late FX response - from throwing
@@ -93,13 +92,9 @@ function FitBoundsToPlaces({ places, framedOnMount }: { places: any[]; framedOnM
   const fitKey = places.map((p) => `${p.lat},${p.lng}`).join('|');
   useEffect(() => {
     if (places.length === 0) return;
-    // The map already opened framed on these places; fitting again would only re-do it.
-    // Picking a day afterwards still refits to that day.
-    if (!fitRan.current && framedOnMount) {
-      fitRan.current = true;
-      return;
-    }
-    fitRan.current = true;
+    // Leaflet knows the map's real rendered dimensions; unlike the lightweight
+    // viewport estimate used for its first paint, this cannot leave pins clipped
+    // at either edge.
     const bounds = L.latLngBounds(places.map((p) => [p.lat, p.lng]));
     map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
   }, [fitKey, map]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -128,6 +123,7 @@ export default function SharedTripPage() {
   const [focusedMapPlace, setFocusedMapPlace] = useState<{ dayId: number; placeId: number } | null>(null);
   const [tileError, setTileError] = useState(false);
   const markerRefs = useRef<Record<string, any>>({});
+  const mapWrapperRef = useRef<HTMLDivElement | null>(null);
   // Page = wiring container: share fetch + view state live in the hook.
   const {
     data,
@@ -259,6 +255,7 @@ export default function SharedTripPage() {
   };
   const focusDailyPlace = (dayId: number, place: any) => {
     if (!hasCoordinates(place)) return;
+    mapWrapperRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
     setTileError(false);
     setFocusedMapPlace({ dayId, placeId: place.id });
     setSelectedDay(dayId);
@@ -491,6 +488,7 @@ export default function SharedTripPage() {
                 map down was a control 300px further down the page. */}
             {sortedDays.length > 0 && (
               <div
+                ref={mapWrapperRef}
                 style={{
                   position: 'sticky',
                   top: 0,
@@ -550,6 +548,7 @@ export default function SharedTripPage() {
                 <MapContainer
                   center={initialView.center}
                   zoom={initialView.zoom}
+                  zoomControl={false}
                   // Keep Leaflet's zoom ceiling explicit so a later fitBounds has a
                   // finite limit even though this is a token-scoped raster layer.
                   maxZoom={SHARED_MAP_MAX_ZOOM}
@@ -564,7 +563,7 @@ export default function SharedTripPage() {
                     referrerPolicy="origin"
                     eventHandlers={{ tileerror: () => setTileError(true) }}
                   />
-                  <FitBoundsToPlaces places={mapPlaces} framedOnMount={framed !== null} />
+                  <FitBoundsToPlaces places={mapPlaces} />
                   <FocusMapPlace place={focusedPlace} markerRefs={markerRefs} />
                   {dayRoutePlaces.length > 1 && (
                     <Polyline

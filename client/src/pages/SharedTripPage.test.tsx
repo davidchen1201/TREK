@@ -11,8 +11,8 @@ import L from 'leaflet';
 
 // Mock react-leaflet (SharedTripPage renders a map)
 vi.mock('react-leaflet', () => ({
-  MapContainer: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="map-container">{children}</div>
+  MapContainer: ({ children, zoomControl }: { children: React.ReactNode; zoomControl?: boolean }) => (
+    <div data-testid="map-container" data-default-zoom-control={String(zoomControl)}>{children}</div>
   ),
   TileLayer: ({ url, attribution }: { url: string; attribution?: string }) => (
     <div data-testid="raster-tiles" data-url={url} data-attribution={attribution}>
@@ -22,18 +22,11 @@ vi.mock('react-leaflet', () => ({
   Marker: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Polyline: () => <div data-testid="route-line" />,
   Popup: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
-  ZoomControl: () => <div data-testid="map-zoom-control" />,
+  ZoomControl: ({ position }: { position?: string }) => <div data-testid="map-zoom-control" data-position={position} />,
   useMap: () => ({
     fitBounds: vi.fn(),
     getCenter: vi.fn(() => ({ lat: 0, lng: 0 })),
   }),
-}));
-
-// The basemap is a MapLibre style now, and the real component reaches for
-// maplibre-gl through a dynamic import. The page test only cares that it is the
-// thing being rendered.
-vi.mock('../components/Map/VectorBasemap', () => ({
-  default: ({ style }: { style: string }) => <div data-testid="vector-basemap" data-style={style} />,
 }));
 
 vi.mock('leaflet', () => {
@@ -933,6 +926,8 @@ describe('SharedTripPage', () => {
         '/api/shared/basemap-token/map-tiles/{z}/{x}/{y}.png',
       );
       expect(screen.getByText('© OpenStreetMap contributors')).toBeInTheDocument();
+      expect(screen.getByTestId('map-container')).toHaveAttribute('data-default-zoom-control', 'false');
+      expect(screen.getByTestId('map-zoom-control')).toHaveAttribute('data-position', 'topright');
     });
   });
 

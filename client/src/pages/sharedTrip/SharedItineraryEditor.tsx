@@ -383,6 +383,12 @@ export function EditableSharedNote({
               rehypePlugins={sanitizedMarkdownPlugins}
               components={{
                 ...sanitizedMarkdownComponents,
+                a: ({ children, href }) => (
+                  <a href={href} target={href?.startsWith('#') ? undefined : '_blank'} rel="noopener noreferrer nofollow"
+                    style={{ color: '#0f766e', textDecoration: 'underline', textUnderlineOffset: 3 }}>
+                    {children}
+                  </a>
+                ),
                 p: ({ children }) => <p style={{ margin: '0 0 6px', whiteSpace: 'pre-wrap' }}>{children}</p>,
                 img: () => null,
               }}
