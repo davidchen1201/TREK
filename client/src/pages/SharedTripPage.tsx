@@ -1,20 +1,14 @@
 import L from 'leaflet';
 import { Bus, Car, Hotel, Luggage, Map, MessageCircle, Plane, Ship, Ticket, Train, Wallet } from 'lucide-react';
-import { createElement, useEffect, useRef } from 'react';
-import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from 'react-leaflet';
+import { createElement, useEffect, useRef, useState, type MutableRefObject } from 'react';
+import { useParams } from 'react-router';
+import { MapContainer, Marker, Polyline, Popup, TileLayer, useMap, ZoomControl } from 'react-leaflet';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import VectorBasemap from '../components/Map/VectorBasemap';
 import { getCategoryIcon } from '../components/shared/categoryIcons';
 import { sanitizedMarkdownComponents, sanitizedMarkdownPlugins } from '../components/shared/markdownSanitize';
 import PublicLanguagePicker from '../components/shared/PublicLanguagePicker';
-import {
-  attributionForTile,
-  DEFAULT_MAP_CENTER,
-  DEFAULT_MAP_ZOOM,
-  MAP_MAX_ZOOM,
-  OFM_POSITRON,
-} from '../constants/mapDefaults';
+import { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from '../constants/mapDefaults';
 import { useTranslation } from '../i18n';
 import { avatarSrc } from '../utils/avatarSrc';
 import { getTransportForDay, hidesOnMiddleDay } from '../utils/dayMerge';
@@ -24,11 +18,13 @@ import { splitReservationDateTime } from '../utils/formatters';
 import { renderIconMarkup } from '../utils/iconMarkup';
 import { computeMapViewport, TILE_SIZE_RASTER } from '../utils/mapViewport';
 import { safeHexColor } from '../utils/safeColor';
-import { resolveBasemap } from '../utils/tileUrl';
 import { AddSharedNote, DayChevron, EditableDayTitle, EditableSharedNote } from './sharedTrip/SharedItineraryEditor';
 import { useSharedTrip } from './sharedTrip/useSharedTrip';
 
 const TRANSPORT_ICONS = { flight: Plane, train: Train, bus: Bus, car: Car, cruise: Ship };
+const SHARED_MAP_MAX_ZOOM = 18;
+const SHARED_OSM_ATTRIBUTION =
+  '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap contributors</a>';
 
 // Injected into Leaflet's marker HTML, where CSS variables cannot reach - the same
 // reason MapView.tsx is exempt from theme:lint outright.
@@ -39,9 +35,8 @@ function createMarkerIcon(place: any, orderNumbers?: number[] | null) {
   const cat = place.category;
   // This page answers without a guard, so an unescaped colour here reaches
   // people who have no account on the instance at all.
-  // The payload carries the category in two shapes: nested on a day's assignments,
-  // flat on the trip-wide pool. Reading only the nested one dropped every marker
-  // outside a day selection to the placeholder colour.
+  // The shared payload nests a category on day assignments, while older payloads
+  // can carry its colour/icon flat on the place itself.
   const color = safeHexColor(cat?.color ?? place.category_color, '#6366f1');
   const CatIcon = getCategoryIcon(cat?.icon ?? place.category_icon);
   const iconSvg = renderIconMarkup(createElement(CatIcon, { size: 14, strokeWidth: 2, color: 'white' }));
@@ -56,6 +51,36 @@ function createMarkerIcon(place: any, orderNumbers?: number[] | null) {
     iconAnchor: [14, 14],
     html: `<div style="position:relative;width:28px;height:28px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid white;">${iconSvg}${badge}</div>`,
   });
+}
+
+/** A public share must not guess a location from an address. In particular, zero
+ * is a real coordinate (Null Island / equator / prime meridian), not a missing
+ * value, so truthiness checks are deliberately avoided here. */
+function hasCoordinates(place: any): boolean {
+  const lat = place?.lat;
+  const lng = place?.lng;
+  return (
+    lat !== null &&
+    lat !== undefined &&
+    lng !== null &&
+    lng !== undefined &&
+    Number.isFinite(Number(lat)) &&
+    Number.isFinite(Number(lng)) &&
+    Number(lat) >= -90 &&
+    Number(lat) <= 90 &&
+    Number(lng) >= -180 &&
+    Number(lng) <= 180
+  );
+}
+
+function mappedPlace(place: any) {
+  return { ...place, lat: Number(place.lat), lng: Number(place.lng) };
+}
+
+function placeTime(place: any): string | null {
+  const start = place?.place_time;
+  const end = place?.end_time;
+  return start ? `${start}${end ? ` – ${end}` : ''}` : null;
 }
 
 function FitBoundsToPlaces({ places, framedOnMount }: { places: any[]; framedOnMount: boolean }) {
@@ -81,8 +106,28 @@ function FitBoundsToPlaces({ places, framedOnMount }: { places: any[]; framedOnM
   return null;
 }
 
+/** Opens the marker's own Leaflet popup after a daily-place chip is chosen. The
+ * map remains entirely in this page: there is no Google Maps hand-off. */
+function FocusMapPlace({ place, markerRefs }: { place: any | null; markerRefs: MutableRefObject<Record<string, any>> }) {
+  const map = useMap();
+  const focusKey = place ? `${place.id}:${place.lat}:${place.lng}` : '';
+
+  useEffect(() => {
+    if (!place || !hasCoordinates(place)) return;
+    const currentZoom = map.getZoom?.() ?? 14;
+    map.flyTo?.([place.lat, place.lng], Math.max(currentZoom, 14), { animate: true, duration: 0.45 });
+    markerRefs.current[String(place.id)]?.openPopup?.();
+  }, [focusKey, map, markerRefs]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return null;
+}
+
 export default function SharedTripPage() {
   const { t, locale } = useTranslation();
+  const { token } = useParams<{ token: string }>();
+  const [focusedMapPlace, setFocusedMapPlace] = useState<{ dayId: number; placeId: number } | null>(null);
+  const [tileError, setTileError] = useState(false);
+  const markerRefs = useRef<Record<string, any>>({});
   // Page = wiring container: share fetch + view state live in the hook.
   const {
     data,
@@ -145,7 +190,6 @@ export default function SharedTripPage() {
     days,
     assignments,
     dayNotes,
-    places,
     reservations,
     accommodations,
     packing,
@@ -153,7 +197,6 @@ export default function SharedTripPage() {
     categories,
     permissions,
     collab,
-    cartoApiKey,
   } = data;
   const sortedDays = [...(days || [])].sort((a: any, b: any) => a.day_number - b.day_number);
   const displayChinese =
@@ -170,11 +213,8 @@ export default function SharedTripPage() {
         .join(' ')
     );
   const displayLocale = displayChinese ? 'zh-CN' : locale;
-
-  // Map places. In day mode each stop carries its position in the day's order; the
-  // trip-wide pool has none (it arrives by created_at). The index runs over the full
-  // sorted assignment list, like the planner does, so a stop without coordinates still
-  // consumes a number and the app and the share link agree on what "3" means.
+  // The index runs over the full sorted assignment list, so a stop without
+  // coordinates still consumes a number and the share page agrees with the planner.
   const dayAssignments = selectedDay
     ? [...(assignments[String(selectedDay)] || [])].sort((a: any, b: any) => a.order_index - b.order_index)
     : [];
@@ -187,26 +227,42 @@ export default function SharedTripPage() {
   const seenPlaceIds = new Set<number>();
   for (const a of dayAssignments as any[]) {
     const p = a.place;
-    if (!p?.lat || !p?.lng || seenPlaceIds.has(p.id)) continue;
+    if (!p?.id || !hasCoordinates(p) || seenPlaceIds.has(p.id)) continue;
     seenPlaceIds.add(p.id);
-    dayPlaces.push(p);
+    dayPlaces.push(mappedPlace(p));
   }
-  const mapPlaces = selectedDay ? dayPlaces : (places || []).filter((p: any) => p?.lat && p?.lng);
+  // The selected day is the only map scope. Keep the route sequence separate
+  // from unique markers so repeated stops do not create duplicate marker keys.
+  const dayRoutePlaces = dayAssignments
+    .map((assignment: any) => assignment.place)
+    .filter((place: any) => hasCoordinates(place))
+    .map(mappedPlace);
+  const mapPlaces = dayPlaces;
+  const focusedPlace =
+    focusedMapPlace?.dayId === selectedDay
+      ? mapPlaces.find((place: any) => place.id === focusedMapPlace.placeId) ?? null
+      : null;
+  const selectedDayHasPlaces = dayAssignments.some((assignment: any) => assignment.place);
 
-  // Open framed on the trip's places instead of on Paris. MapContainer only reads center/zoom
-  // at mount, so recomputing this per render is free — and the fit below takes over from there.
+  // Open framed on the selected day's verified places. MapContainer only reads
+  // center/zoom at mount; the fit helper handles later day changes.
   const framed = computeMapViewport(mapPlaces, {
     tileSize: TILE_SIZE_RASTER,
     padding: { top: 40, right: 40, bottom: 40, left: 40 },
   });
   const initialView = framed ?? { center: DEFAULT_MAP_CENTER, zoom: DEFAULT_MAP_ZOOM };
-
-  // A visitor of a share link has no settings of their own, so the basemap is the
-  // app default: OpenFreeMap, a vector style that needs no key at all. The owner's
-  // CARTO key still travels in the payload and is still applied, because the
-  // fallback is only a fallback — a raster template reaching this page keeps
-  // working, and without the key CARTO would stamp "API KEY REQUIRED" over it.
-  const basemap = resolveBasemap(null, OFM_POSITRON, cartoApiKey);
+  const tileUrl = `/api/shared/${encodeURIComponent(token || '')}/map-tiles/{z}/{x}/{y}.png`;
+  const chooseDay = (dayId: number) => {
+    setFocusedMapPlace(null);
+    setTileError(false);
+    setSelectedDay(dayId);
+  };
+  const focusDailyPlace = (dayId: number, place: any) => {
+    if (!hasCoordinates(place)) return;
+    setTileError(false);
+    setFocusedMapPlace({ dayId, placeId: place.id });
+    setSelectedDay(dayId);
+  };
 
   return (
     <div
@@ -456,7 +512,7 @@ export default function SharedTripPage() {
                     <button
                       key={id}
                       type="button"
-                      onClick={() => setSelectedDay(id)}
+                      onClick={() => chooseDay(id)}
                       aria-pressed={active}
                       // Same literals as the day-number circle below. This page pins itself
                       // to the light neutral look (applyAppearance skips /shared/*), so a
@@ -480,12 +536,13 @@ export default function SharedTripPage() {
                 })}
               </div>
             )}
-            {mapPlaces.length > 0 && (
+            {mapPlaces.length > 0 ? (
               <div
                 style={{
+                  position: 'relative',
                   borderRadius: 16,
                   overflow: 'hidden',
-                  height: 300,
+                  height: 'clamp(320px, 48vw, 390px)',
                   marginBottom: 20,
                   boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
                 }}
@@ -493,39 +550,115 @@ export default function SharedTripPage() {
                 <MapContainer
                   center={initialView.center}
                   zoom={initialView.zoom}
-                  zoomControl={false}
-                  // Same reason as the planner map: a vector basemap contributes
-                  // no zoom ceiling, and fitBounds below asks for one.
-                  maxZoom={MAP_MAX_ZOOM}
+                  // Keep Leaflet's zoom ceiling explicit so a later fitBounds has a
+                  // finite limit even though this is a token-scoped raster layer.
+                  maxZoom={SHARED_MAP_MAX_ZOOM}
                   style={{ width: '100%', height: '100%' }}
                 >
-                  {basemap.kind === 'vector' ? (
-                    <VectorBasemap style={basemap.style} />
-                  ) : (
-                    <TileLayer
-                      url={basemap.url}
-                      attribution={attributionForTile(basemap.url)}
-                      referrerPolicy="strict-origin-when-cross-origin"
-                    />
-                  )}
+                  <ZoomControl position="topright" />
+                  <TileLayer
+                    url={tileUrl}
+                    attribution={SHARED_OSM_ATTRIBUTION}
+                    maxZoom={SHARED_MAP_MAX_ZOOM}
+                    noWrap
+                    referrerPolicy="origin"
+                    eventHandlers={{ tileerror: () => setTileError(true) }}
+                  />
                   <FitBoundsToPlaces places={mapPlaces} framedOnMount={framed !== null} />
-                  {selectedDay && mapPlaces.length > 1 && (
+                  <FocusMapPlace place={focusedPlace} markerRefs={markerRefs} />
+                  {dayRoutePlaces.length > 1 && (
                     <Polyline
-                      positions={mapPlaces.map((p: any) => [p.lat, p.lng])}
+                      positions={dayRoutePlaces.map((p: any) => [p.lat, p.lng])}
                       // Dashed and straight on purpose: it shows the order of the day's stops,
                       // not the roads between them. A real route would mean sending the
                       // itinerary to a third party for every anonymous visitor of a shared
                       // link, with no way for the trip's owner to opt out.
-                      pathOptions={{ color: '#0a84ff', weight: 3, opacity: 0.8, dashArray: '6 8', lineCap: 'round' }} // theme-lint-disable
+                      pathOptions={{ color: '#2e6253', weight: 3, opacity: 0.78, dashArray: '6 8', lineCap: 'round' }} // theme-lint-disable
                       interactive={false}
                     />
                   )}
                   {mapPlaces.map((p: any) => (
-                    <Marker key={p.id} position={[p.lat, p.lng]} icon={createMarkerIcon(p, dayOrderMap[p.id] ?? null)}>
-                      <Tooltip>{p.name}</Tooltip>
+                    <Marker
+                      key={p.id}
+                      position={[p.lat, p.lng]}
+                      icon={createMarkerIcon(p, dayOrderMap[p.id] ?? null)}
+                      ref={(marker) => {
+                        if (marker) markerRefs.current[String(p.id)] = marker;
+                      }}
+                    >
+                      <Popup>
+                        <div style={{ minWidth: 128, color: '#1e293b', fontFamily: 'var(--font-system)' }}>
+                          <strong style={{ display: 'block', fontSize: 14 }}>{p.name}</strong>
+                          {placeTime(p) && <span style={{ display: 'block', marginTop: 4, color: '#557064', fontSize: 12 }}>{placeTime(p)}</span>}
+                        </div>
+                      </Popup>
                     </Marker>
                   ))}
                 </MapContainer>
+                {dayRoutePlaces.length > 1 && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      left: 10,
+                      zIndex: 500,
+                      maxWidth: 'calc(100% - 20px)',
+                      padding: '5px 8px',
+                      borderRadius: 8,
+                      color: '#245246',
+                      background: 'rgba(255,255,255,.91)',
+                      boxShadow: '0 1px 5px rgba(25,55,45,.14)',
+                      fontSize: 12,
+                      fontWeight: 650,
+                      pointerEvents: 'none',
+                    }}
+                  >
+                    地点连线，非实际行车路线
+                  </div>
+                )}
+                {tileError && (
+                  <div
+                    role="status"
+                    style={{
+                      position: 'absolute',
+                      right: 10,
+                      bottom: 10,
+                      zIndex: 500,
+                      maxWidth: 260,
+                      padding: '7px 9px',
+                      borderRadius: 8,
+                      color: '#7c2d12',
+                      background: 'rgba(255,247,237,.94)',
+                      border: '1px solid #fed7aa',
+                      boxShadow: '0 1px 5px rgba(124,45,18,.12)',
+                      fontSize: 12,
+                      lineHeight: 1.4,
+                    }}
+                  >
+                    地图底图暂时无法加载；地点列表仍可使用。
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div
+                style={{
+                  minHeight: 320,
+                  marginBottom: 20,
+                  display: 'grid',
+                  placeItems: 'center',
+                  border: '1px dashed #b8cbbd',
+                  borderRadius: 16,
+                  color: '#557064',
+                  background: '#edf3ed',
+                  textAlign: 'center',
+                  padding: 24,
+                }}
+              >
+                <div>
+                  <Map size={24} style={{ margin: '0 auto 8px' }} />
+                  <div style={{ fontWeight: 750 }}>{selectedDayHasPlaces ? '位置待补充' : '当天暂无地图地点'}</div>
+                  {selectedDayHasPlaces && <div style={{ marginTop: 5, fontSize: 13 }}>地点资料保留在下方行程中。</div>}
+                </div>
               </div>
             )}
 
@@ -565,9 +698,9 @@ export default function SharedTripPage() {
                     <div
                       role="button"
                       tabIndex={0}
-                      onClick={() => setSelectedDay(day.id)}
+                      onClick={() => chooseDay(day.id)}
                       onKeyDown={(event) => {
-                        if (event.key === 'Enter' || event.key === ' ') setSelectedDay(day.id);
+                        if (event.key === 'Enter' || event.key === ' ') chooseDay(day.id);
                       }}
                       aria-expanded={selectedDay === day.id}
                       style={{
@@ -602,7 +735,7 @@ export default function SharedTripPage() {
                         <EditableDayTitle
                           day={day}
                           editable={editable}
-                          locale={locale}
+                          locale={displayLocale}
                           onSave={(title) => updateDay(day.id, title)}
                         />
                         {day.date && (
@@ -667,12 +800,18 @@ export default function SharedTripPage() {
                                 .map((assignment: any) => {
                                   const place = assignment.place;
                                   const category = categories?.find((item: any) => item.id === place.category_id);
+                                  const canFocusMap = hasCoordinates(place);
                                   return (
-                                    <a
+                                    <button
+                                      type="button"
                                       key={assignment.id}
-                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([place.name, place.address].filter(Boolean).join(' '))}`}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
+                                      onClick={() => focusDailyPlace(day.id, place)}
+                                      disabled={!canFocusMap}
+                                      aria-label={
+                                        canFocusMap
+                                          ? `${place.name}：在地图中查看`
+                                          : `${place.name}：位置待补充`
+                                      }
                                       style={{
                                         display: 'inline-flex',
                                         maxWidth: '100%',
@@ -687,6 +826,9 @@ export default function SharedTripPage() {
                                         boxShadow: '0 1px 3px rgba(15,23,42,.04)',
                                         fontSize: 14,
                                         fontWeight: 650,
+                                        fontFamily: 'inherit',
+                                        cursor: canFocusMap ? 'pointer' : 'not-allowed',
+                                        opacity: canFocusMap ? 1 : 0.7,
                                       }}
                                     >
                                       <span
@@ -703,7 +845,12 @@ export default function SharedTripPage() {
                                       >
                                         {place.name}
                                       </span>
-                                    </a>
+                                      {!canFocusMap && (
+                                        <span style={{ color: '#8a5a2b', fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>
+                                          位置待补充
+                                        </span>
+                                      )}
+                                    </button>
                                   );
                                 })}
                             </div>
@@ -777,7 +924,7 @@ export default function SharedTripPage() {
                                 key={note.id}
                                 note={note}
                                 editable={editable}
-                                locale={locale}
+                                locale={displayLocale}
                                 onSave={(patch) =>
                                   updateDayNote(day.id, note.id, {
                                     ...patch,
@@ -804,7 +951,7 @@ export default function SharedTripPage() {
                             )}
                             {editable && (
                               <AddSharedNote
-                                locale={locale}
+                                locale={displayLocale}
                                 onAdd={(text, time) =>
                                   createDayNote(day.id, {
                                     text: `[ ] ${text}`,

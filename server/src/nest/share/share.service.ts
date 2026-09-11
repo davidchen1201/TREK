@@ -148,6 +148,14 @@ export class ShareService {
     return row?.trip_id ?? null;
   }
 
+  /** A map tile is public only while this token still permits the itinerary. */
+  hasSharedMapAccess(token: string): boolean {
+    return !!this.dbs.get(
+      "SELECT 1 FROM share_tokens WHERE token = ? AND share_map = 1 AND (expires_at IS NULL OR julianday(expires_at) > julianday('now'))",
+      token,
+    );
+  }
+
   /**
    * Loads the full public trip data for a share token, filtered by the token's
    * permission flags. Returns null if the token is invalid or the trip is gone.

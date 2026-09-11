@@ -6,6 +6,13 @@ import { EditableSharedNote } from './SharedItineraryEditor';
 const note = { id: 9, text: '[ ] 大皇宫｜上午参观', time: '09:00', icon: '📝', sort_order: 1, color: null };
 
 describe('EditableSharedNote', () => {
+  it('renders official source links safely without loading user-supplied images', () => {
+    render(<EditableSharedNote note={{ ...note, text: '**待酒店确认** [官方活动](https://www.aman.com/resorts/amansara/experiences) ![tracker](https://example.com/pixel)' }} editable locale="zh-CN" onSave={vi.fn()} onDelete={vi.fn()} />);
+    expect(screen.getByRole('link', { name: '官方活动' })).toHaveAttribute('href', 'https://www.aman.com/resorts/amansara/experiences');
+    expect(screen.getByRole('link', { name: '官方活动' })).toHaveAttribute('rel', 'noopener noreferrer nofollow');
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+  });
+
   it('persists a checklist toggle in the compact note format', async () => {
     const user = userEvent.setup();
     const onSave = vi.fn().mockResolvedValue(undefined);

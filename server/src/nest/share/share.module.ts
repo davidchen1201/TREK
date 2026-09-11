@@ -11,10 +11,11 @@ import { AuthModule } from '../auth/auth.module';
 import { McpSharedModule } from '../mcp-shared/mcp-shared.module';
 import { DaysModule } from '../days/days.module';
 import { DayNotesModule } from '../day-notes/day-notes.module';
+import { MapTileService } from './map-tile.service';
 
 @Module({
   imports: [McpSharedModule, SettingsModule, PermissionsModule, QueryHelpersModule, AuthModule, PlacePhotosModule, StorageModule, DaysModule, DayNotesModule],
   controllers: [TripShareController, SharedController],
-  providers: [ShareService, ShareMcp],
+  providers: [ShareService, ShareMcp, MapTileService],
 })
 export class ShareModule {}

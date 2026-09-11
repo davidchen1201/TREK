@@ -14,6 +14,7 @@ import { DaysService } from '../days/days.service';
 import { DayUpdateDto } from '../days/days.dto';
 import { DayNotesService } from '../day-notes/day-notes.service';
 import { DayNoteCreateDto, DayNoteUpdateDto } from '../day-notes/day-notes.dto';
+import { MapTileService, parseTileCoordinates } from './map-tile.service';
 
 /**
  * /api/trips/:tripId/share-link — manage a trip's public read-only share token.
@@ -92,6 +93,7 @@ export class SharedController {
     private readonly storage: StorageService,
     private readonly days: DaysService,
     private readonly notes: DayNotesService,
+    private readonly mapTiles: MapTileService,
   ) {}
 
   private editableTripId(token: string): string {
@@ -156,6 +158,37 @@ export class SharedController {
   private emptyPhoto(res: Response): void {
     res.set('Cache-Control', 'no-store');
     res.status(204).end();
+  }
+
+  /**
+   * OSM standard-raster proxy for the interactive shared-trip map. The token is
+   * checked before a coordinate is accepted or any outbound request can occur.
+   * This must remain above the bare ':token' route.
+   */
+  @Get(':token/map-tiles/:z/:x/:y.png')
+  async mapTile(
+    @Param('token') token: string,
+    @Param('z') z: string,
+    @Param('x') x: string,
+    @Param('y') y: string,
+    @Headers('referer') referer: string | undefined,
+    @Res() res: Response,
+  ): Promise<void> {
+    if (!this.share.hasSharedMapAccess(token)) {
+      throw new HttpException({ error: 'Invalid or expired link' }, 404);
+    }
+    const coords = parseTileCoordinates(z, x, y);
+    if (!coords) throw new HttpException({ error: 'Tile not found' }, 404);
+    try {
+      const bytes = await this.mapTiles.get(coords, referer);
+      // Token revocation/expiry must be checked on every map request, even when
+      // the server's seven-day disk cache serves the bytes.
+      res.set('Cache-Control', 'private, no-store');
+      res.set('X-Content-Type-Options', 'nosniff');
+      res.type('image/png').send(bytes);
+    } catch {
+      throw new HttpException({ error: 'Map tiles temporarily unavailable' }, 502);
+    }
   }
 
   @Get(':token')

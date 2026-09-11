@@ -14,10 +14,15 @@ vi.mock('react-leaflet', () => ({
   MapContainer: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="map-container">{children}</div>
   ),
-  TileLayer: ({ url }: { url: string }) => <div data-testid="raster-tiles" data-url={url} />,
+  TileLayer: ({ url, attribution }: { url: string; attribution?: string }) => (
+    <div data-testid="raster-tiles" data-url={url} data-attribution={attribution}>
+      © OpenStreetMap contributors
+    </div>
+  ),
   Marker: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
   Polyline: () => <div data-testid="route-line" />,
-  Tooltip: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  Popup: ({ children }: { children?: React.ReactNode }) => <div>{children}</div>,
+  ZoomControl: () => <div data-testid="map-zoom-control" />,
   useMap: () => ({
     fitBounds: vi.fn(),
     getCenter: vi.fn(() => ({ lat: 0, lng: 0 })),
@@ -130,16 +135,15 @@ describe('SharedTripPage', () => {
     });
   });
 
-  describe('FE-PAGE-SHARED-007: Map is rendered', () => {
-    it('renders the map container for the shared trip', async () => {
+  describe('FE-PAGE-SHARED-007: Map empty state is rendered', () => {
+    it('shows a location-pending state when the shared trip has no verified coordinates', async () => {
       renderSharedTrip('test-token');
 
       await waitFor(() => {
         expect(screen.getByText('Shared Paris Trip')).toBeInTheDocument();
       });
 
-      // Map container should be rendered
-      expect(screen.getByTestId('map-container')).toBeInTheDocument();
+      expect(screen.getByText('当天暂无地图地点')).toBeInTheDocument();
     });
   });
 
@@ -323,16 +327,8 @@ describe('SharedTripPage', () => {
         expect(screen.getByText('Shared Paris Trip')).toBeInTheDocument();
       });
 
-      // Eiffel Tower is only in the mocked map tooltip (1 occurrence)
-      expect(screen.getAllByText('Eiffel Tower')).toHaveLength(1);
-
-      // Click the day card header to expand it
-      fireEvent.click(screen.getByText('Day One'));
-
-      // Now Eiffel Tower also appears in the expanded day content
-      await waitFor(() => {
-        expect(screen.getAllByText('Eiffel Tower')).toHaveLength(2);
-      });
+      // The first day opens by default; the place appears in its popup and daily chip.
+      await waitFor(() => expect(screen.getAllByText('Eiffel Tower')).toHaveLength(2));
     });
   });
 
@@ -617,6 +613,12 @@ describe('SharedTripPage', () => {
     serve(token, body);
     renderSharedTrip(token);
     await waitFor(() => expect(screen.getByText('Shared Paris Trip')).toBeInTheDocument());
+    // The public page intentionally opens its first day after the snapshot lands.
+    // Wait for that follow-up state so map assertions never inspect the short
+    // pre-selection placeholder render.
+    if (Array.isArray(body.days) && body.days.length > 0) {
+      await waitFor(() => expect(document.querySelector('[aria-pressed="true"]')).not.toBeNull());
+    }
   }
 
   function coverStyle(): string {
@@ -684,7 +686,7 @@ describe('SharedTripPage', () => {
       // share_map is undefined, so the Plan tab (the !== false branch) stays visible.
       expect(screen.getByRole('button', { name: /plan/i })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: /bookings/i })).toBeNull();
-      expect(screen.getByTestId('map-container')).toBeInTheDocument();
+      expect(screen.getByText('当天暂无地图地点')).toBeInTheDocument();
       // The day card still renders even though reservations/accommodations are absent.
       expect(screen.getByText('Lone day')).toBeInTheDocument();
       expect(screen.getByText('0 places')).toBeInTheDocument();
@@ -784,23 +786,16 @@ describe('SharedTripPage', () => {
       expect(screen.getByText(/^12:00$/)).toBeInTheDocument();
     });
 
-    it('only maps the selected day and refits the map to it', async () => {
+    it('maps day one by default and keeps ungeocoded places out of the map', async () => {
       await open('mapday-token', payload({
         days: [day],
         places: [withImage, withDescription],
         assignments: { '7': [{ id: 301, day_id: 7, place_id: 201, order_index: 0, place: withImage }] },
       }));
 
-      // Unselected: both places are candidates, but only the geocoded one has a marker.
-      expect(screen.getAllByText('Louvre')).toHaveLength(1);
-      expect(screen.queryByText('Seine Walk')).toBeNull();
-
-      fireEvent.click(screen.getByText('Day One'));
       await waitFor(() => expect(screen.getAllByText('Louvre')).toHaveLength(2));
-
-      // Collapsing again restores the trip-wide marker set.
-      fireEvent.click(screen.getByText('Day One'));
-      await waitFor(() => expect(screen.getAllByText('Louvre')).toHaveLength(1));
+      expect(screen.getByText('Seine Walk')).toBeInTheDocument();
+      expect(screen.getByText('位置待补充')).toBeInTheDocument();
     });
   });
 
@@ -829,7 +824,6 @@ describe('SharedTripPage', () => {
         },
       }));
 
-      fireEvent.click(screen.getByRole('button', { name: 'Day 1' }));
       await waitFor(() => expect(iconHtml().some((h: string) => h.includes('>1<'))).toBe(true));
 
       const html = iconHtml();
@@ -852,13 +846,12 @@ describe('SharedTripPage', () => {
         },
       }));
 
-      fireEvent.click(screen.getByRole('button', { name: 'Day 1' }));
       await waitFor(() => expect(iconHtml().some((h: string) => h.includes('1 \u00b7 3'))).toBe(true));
       // One marker for the repeated place, not two with the same React key.
       expect(iconHtml().filter((h: string) => h.includes('1 \u00b7 3'))).toHaveLength(1);
     });
 
-    it('leaves the trip-wide pool unnumbered, since it has no order to show', async () => {
+    it('does not render unassigned trip-wide places on a selected-day map', async () => {
       await open('nonum-token', payload({
         days: [day],
         places: [louvre, orsay],
@@ -866,7 +859,8 @@ describe('SharedTripPage', () => {
       }));
 
       await waitFor(() => expect(iconHtml().length).toBeGreaterThan(0));
-      expect(iconHtml().some((h: string) => h.includes('border-radius:8px'))).toBe(false);
+      expect(iconHtml().some((h: string) => h.includes('>1<'))).toBe(true);
+      expect(iconHtml().some((h: string) => h.includes('>2<'))).toBe(false);
     });
 
     it('draws the connecting line only for a day with more than one stop', async () => {
@@ -881,14 +875,8 @@ describe('SharedTripPage', () => {
         },
       }));
 
-      // No day selected: no line, even though the trip has two geocoded places.
-      expect(screen.queryByTestId('route-line')).toBeNull();
-
-      fireEvent.click(screen.getByRole('button', { name: 'Day 1' }));
       await waitFor(() => expect(screen.getByTestId('route-line')).toBeInTheDocument());
-
-      fireEvent.click(screen.getByRole('button', { name: 'All' }));
-      await waitFor(() => expect(screen.queryByTestId('route-line')).toBeNull());
+      expect(screen.getByText('地点连线，非实际行车路线')).toBeInTheDocument();
     });
 
     it('does not draw a line for a day with a single stop', async () => {
@@ -898,7 +886,6 @@ describe('SharedTripPage', () => {
         assignments: { '7': [{ id: 301, day_id: 7, place_id: 201, order_index: 0, place: louvre }] },
       }));
 
-      fireEvent.click(screen.getByRole('button', { name: 'Day 1' }));
       await waitFor(() => expect(screen.getAllByText('Louvre').length).toBeGreaterThan(1));
       expect(screen.queryByTestId('route-line')).toBeNull();
     });
@@ -909,61 +896,55 @@ describe('SharedTripPage', () => {
     const louvre = { id: 201, name: 'Louvre', lat: 48.86, lng: 2.33, category: null };
     const orsay = { id: 202, name: 'Orsay', lat: 48.85, lng: 2.32, category: null };
 
-    it('narrows the markers to one day and back again', async () => {
+    it('starts with day one selected', async () => {
       await open('picker-token', payload({
         days: [day],
         places: [louvre, orsay],
         assignments: { '7': [{ id: 301, day_id: 7, place_id: 201, order_index: 0, place: louvre }] },
       }));
 
-      // All: both geocoded places are on the map, so Orsay's tooltip is present.
-      expect(screen.getByText('Orsay')).toBeInTheDocument();
-
-      fireEvent.click(screen.getByRole('button', { name: 'Day 1' }));
-      await waitFor(() => expect(screen.queryByText('Orsay')).toBeNull());
-
-      fireEvent.click(screen.getByRole('button', { name: 'All' }));
-      await waitFor(() => expect(screen.getByText('Orsay')).toBeInTheDocument());
+      await waitFor(() => expect(screen.getAllByText('Louvre').length).toBeGreaterThan(1));
+      expect(screen.queryByText('Orsay')).toBeNull();
+      expect(screen.getByRole('button', { name: /^Day 1/ })).toHaveAttribute('aria-pressed', 'true');
     });
 
     it('marks the active chip for assistive tech', async () => {
       await open('pressed-token', payload({ days: [day], places: [louvre], assignments: {} }));
 
-      expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'true');
-      fireEvent.click(screen.getByRole('button', { name: 'Day 1' }));
       await waitFor(() =>
-        expect(screen.getByRole('button', { name: 'Day 1' })).toHaveAttribute('aria-pressed', 'true'),
+        expect(screen.getByRole('button', { name: /^Day 1/ })).toHaveAttribute('aria-pressed', 'true'),
       );
-      expect(screen.getByRole('button', { name: 'All' })).toHaveAttribute('aria-pressed', 'false');
     });
   });
 
-  describe('FE-PAGE-SHARED-041: a share link visitor gets a basemap that needs no key', () => {
+  describe('FE-PAGE-SHARED-041: a share link visitor gets token-scoped raster tiles', () => {
     const louvre = { id: 201, name: 'Louvre', lat: 48.86, lng: 2.33, category: null };
 
-    it('draws the OpenFreeMap style rather than raster tiles', async () => {
-      // A visitor has no settings of their own, so the map falls back to the app
-      // default. CARTO stamps "API KEY REQUIRED" over keyless tiles since
-      // 26.08.2026, and a share link is exactly where nobody has a key.
-      await open('basemap-token', payload({ days: [], places: [louvre], assignments: {} }));
+    it('draws only the same-origin tile endpoint and keeps OSM attribution visible', async () => {
+      const day = { id: 7, trip_id: 1, day_number: 1, date: null, title: 'Day One' };
+      await open('basemap-token', payload({
+        days: [day],
+        places: [louvre],
+        assignments: { '7': [{ id: 301, day_id: 7, place_id: 201, order_index: 0, place: louvre }] },
+      }));
 
-      expect(screen.getByTestId('vector-basemap')).toHaveAttribute(
-        'data-style',
-        'https://tiles.openfreemap.org/styles/positron',
+      expect(screen.getByTestId('raster-tiles')).toHaveAttribute(
+        'data-url',
+        '/api/shared/basemap-token/map-tiles/{z}/{x}/{y}.png',
       );
-      expect(screen.queryByTestId('raster-tiles')).toBeNull();
+      expect(screen.getByText('© OpenStreetMap contributors')).toBeInTheDocument();
     });
   });
 
-  describe('FE-PAGE-SHARED-040: trip-wide markers keep their category colour', () => {
-    // The payload nests the category on a day's assignments but sends it flat on the
-    // trip-wide pool, so reading only the nested shape painted every marker indigo.
-    it('reads the flat category_color the trip pool sends', async () => {
+  describe('FE-PAGE-SHARED-040: day markers keep their category colour', () => {
+    it('reads the nested category colour sent with a selected-day assignment', async () => {
       (L.divIcon as unknown as ReturnType<typeof vi.fn>).mockClear();
+      const day = { id: 7, trip_id: 1, day_number: 1, date: null, title: 'Day One' };
+      const louvre = { id: 201, name: 'Louvre', lat: 48.86, lng: 2.33, category: { color: '#ff8800', icon: 'landmark' } };
       await open('flatcat-token', payload({
-        days: [],
-        places: [{ id: 201, name: 'Louvre', lat: 48.86, lng: 2.33, category_color: '#ff8800', category_icon: 'landmark' }],
-        assignments: {},
+        days: [day],
+        places: [louvre],
+        assignments: { '7': [{ id: 301, day_id: 7, place_id: 201, order_index: 0, place: louvre }] },
       }));
 
       await waitFor(() => expect((L.divIcon as unknown as ReturnType<typeof vi.fn>).mock.calls.length).toBeGreaterThan(0));

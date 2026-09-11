@@ -140,6 +140,7 @@ export const PUBLIC_ROUTE_ALLOW_LIST: string[] = [
   'PluginsProxyController.proxy',
   // Share-token validated.
   'SharedController.createDayNote',
+  'SharedController.mapTile',
   'SharedController.placePhotoBytes',
   'SharedController.read',
   'SharedController.removeDayNote',

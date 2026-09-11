@@ -48,6 +48,7 @@ let checkPermission: MockInstance;
 // Overridden in the container rather than path-mocked: the cache is a provider now.
 // serveKey hands the controller a bare photos-google storage name (slice 3).
 const serveKey = vi.fn();
+const mapTileGet = vi.fn();
 
 import path from 'node:path';
 import fs from 'node:fs';
@@ -55,6 +56,7 @@ import { createTables } from '../../src/db/schema';
 import { runMigrations } from '../../src/db/migrations';
 import { ShareModule } from '../../src/nest/share/share.module';
 import { PlacePhotoCacheService } from '../../src/nest/place-photos/place-photo-cache.service';
+import { MapTileService } from '../../src/nest/share/map-tile.service';
 import { DatabaseModule } from '../../src/nest/database/database.module';
 import { TrekExceptionFilter } from '../../src/nest/common/trek-exception.filter';
 import { ZodValidationPipe } from '../../src/nest/common/zod-validation.pipe';
@@ -67,6 +69,7 @@ describe('Share-link e2e (real auth guard + real SQL over temp SQLite)', () => {
   async function build() {
     const moduleRef = await Test.createTestingModule({ imports: [DatabaseModule, ShareModule] })
       .overrideProvider(PlacePhotoCacheService).useValue({ serveKey })
+      .overrideProvider(MapTileService).useValue({ get: mapTileGet })
       .compile();
     const nest = moduleRef.createNestApplication();
     nest.use(cookieParser());
@@ -98,6 +101,7 @@ describe('Share-link e2e (real auth guard + real SQL over temp SQLite)', () => {
     tripId = Number(db.prepare('INSERT INTO trips (user_id, title) VALUES (1, ?)').run('Trip').lastInsertRowid);
     checkPermission.mockReturnValue(true);
     serveKey.mockReset();
+    mapTileGet.mockReset();
   });
 
   afterAll(async () => {
@@ -163,6 +167,34 @@ describe('Share-link e2e (real auth guard + real SQL over temp SQLite)', () => {
     const res = await request(server).get('/api/shared/bad');
     expect(res.status).toBe(404);
     expect(res.body).toEqual({ error: 'Invalid or expired link' });
+  });
+
+  describe('public map tile proxy (/api/shared/:token/map-tiles/:z/:x/:y.png)', () => {
+    it('serves a same-origin tile only for a current map-enabled token', async () => {
+      const created = await request(server).post(`/api/trips/${tripId}/share-link`).set('Cookie', sessionCookie(1)).send({ share_map: true });
+      mapTileGet.mockResolvedValue(Buffer.from('tile'));
+      const referer = `https://trek.example/shared/${created.body.token}`;
+      const res = await request(server).get(`/api/shared/${created.body.token}/map-tiles/2/1/3.png`).set('Referer', referer);
+      expect(res.status).toBe(200);
+      expect(res.headers['content-type']).toContain('image/png');
+      expect(res.headers['cache-control']).toBe('private, no-store');
+      expect(Buffer.from(res.body)).toEqual(Buffer.from('tile'));
+      expect(mapTileGet).toHaveBeenCalledWith({ z: 2, x: 1, y: 3 }, referer);
+    });
+
+    it('does not call the upstream service for invalid, expired, map-disabled, or out-of-range requests', async () => {
+      expect((await request(server).get('/api/shared/not-a-token/map-tiles/2/1/3.png')).status).toBe(404);
+      const disabled = await request(server).post(`/api/trips/${tripId}/share-link`).set('Cookie', sessionCookie(1)).send({ share_map: false });
+      expect((await request(server).get(`/api/shared/${disabled.body.token}/map-tiles/2/1/3.png`)).status).toBe(404);
+
+      const enabled = await request(server).post(`/api/trips/${tripId}/share-link`).set('Cookie', sessionCookie(1)).send({ share_map: true });
+      db.prepare('UPDATE share_tokens SET expires_at = ? WHERE token = ?').run(new Date(Date.now() - 60_000).toISOString(), enabled.body.token);
+      expect((await request(server).get(`/api/shared/${enabled.body.token}/map-tiles/2/1/3.png`)).status).toBe(404);
+
+      await request(server).post(`/api/trips/${tripId}/share-link`).set('Cookie', sessionCookie(1)).send({ share_map: true });
+      expect((await request(server).get(`/api/shared/${enabled.body.token}/map-tiles/2/4/0.png`)).status).toBe(404);
+      expect(mapTileGet).not.toHaveBeenCalled();
+    });
   });
 
   describe('public place-photo proxy (/api/shared/:token/place-photo/:placeId/bytes)', () => {

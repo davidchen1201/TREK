@@ -8,6 +8,7 @@ import type { ShareService } from '../../../src/nest/share/share.service';
 import type { StorageService } from '../../../src/nest/storage/storage.service';
 import type { DaysService } from '../../../src/nest/days/days.service';
 import type { DayNotesService } from '../../../src/nest/day-notes/day-notes.service';
+import type { MapTileService } from '../../../src/nest/share/map-tile.service';
 import type { User } from '../../../src/types';
 
 // Only the shared place-photo proxy consumes storage.
@@ -15,6 +16,7 @@ const getStream = vi.fn();
 const storageStub = { getStream } as unknown as StorageService;
 const daysStub = {} as DaysService;
 const notesStub = {} as DayNotesService;
+const mapTilesStub = { get: vi.fn() } as unknown as MapTileService;
 
 const user = { id: 1, role: 'user', email: 'u@example.test' } as User;
 
@@ -81,8 +83,8 @@ describe('TripShareController', () => {
 
 describe('SharedController', () => {
   it('404 for an invalid token, else returns the snapshot', () => {
-    expect(thrown(() => new SharedController(svc({ getSharedTripData: vi.fn().mockReturnValue(null) } as Partial<ShareService>), storageStub, daysStub, notesStub).read('bad'))).toEqual({ status: 404, body: { error: 'Invalid or expired link' } });
-    expect(new SharedController(svc({ getSharedTripData: vi.fn().mockReturnValue({ trip: { id: 9 } }) } as Partial<ShareService>), storageStub, daysStub, notesStub).read('tok')).toEqual({ trip: { id: 9 } });
+    expect(thrown(() => new SharedController(svc({ getSharedTripData: vi.fn().mockReturnValue(null) } as Partial<ShareService>), storageStub, daysStub, notesStub, mapTilesStub).read('bad'))).toEqual({ status: 404, body: { error: 'Invalid or expired link' } });
+    expect(new SharedController(svc({ getSharedTripData: vi.fn().mockReturnValue({ trip: { id: 9 } }) } as Partial<ShareService>), storageStub, daysStub, notesStub, mapTilesStub).read('tok')).toEqual({ trip: { id: 9 } });
   });
 
   describe('place-photo proxy', () => {
@@ -126,7 +128,7 @@ describe('SharedController', () => {
     });
 
     function controller(key: string | null) {
-      return new SharedController(svc({ getSharedPlacePhotoKey: vi.fn().mockReturnValue(key) } as Partial<ShareService>), storageStub, daysStub, notesStub);
+      return new SharedController(svc({ getSharedPlacePhotoKey: vi.fn().mockReturnValue(key) } as Partial<ShareService>), storageStub, daysStub, notesStub, mapTilesStub);
     }
 
     // #1727's rationale extended to public share pages: shared payloads keep

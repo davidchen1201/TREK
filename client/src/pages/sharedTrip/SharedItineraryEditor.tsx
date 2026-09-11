@@ -1,5 +1,7 @@
 import { Check, ChevronDown, Clock3, Pencil, Plus, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
+import Markdown from 'react-markdown';
+import { sanitizedMarkdownComponents, sanitizedMarkdownPlugins } from '../../components/shared/markdownSanitize';
 
 type Day = { id: number; title?: string | null; day_number?: number };
 type Note = {
@@ -330,10 +332,11 @@ export function EditableSharedNote({
                   font: '14px inherit',
                 }}
               />
-              <input
+              <textarea
                 aria-label={copy.itemPlaceholder}
                 value={text}
                 onChange={(e) => setText(e.target.value)}
+                rows={3}
                 style={{
                   minWidth: 0,
                   flex: '1 1 150px',
@@ -341,6 +344,7 @@ export function EditableSharedNote({
                   borderRadius: 8,
                   padding: '8px',
                   font: '15px inherit',
+                  resize: 'vertical',
                 }}
               />
             </div>
@@ -372,10 +376,19 @@ export function EditableSharedNote({
               lineHeight: 1.55,
               color: visible.done ? '#64748b' : '#1e293b',
               textDecoration: visible.done ? 'line-through' : 'none',
-              whiteSpace: 'pre-wrap',
+              overflowWrap: 'anywhere',
             }}
           >
-            {visible.content}
+            <Markdown
+              rehypePlugins={sanitizedMarkdownPlugins}
+              components={{
+                ...sanitizedMarkdownComponents,
+                p: ({ children }) => <p style={{ margin: '0 0 6px', whiteSpace: 'pre-wrap' }}>{children}</p>,
+                img: () => null,
+              }}
+            >
+              {visible.content}
+            </Markdown>
           </div>
         )}
         {error && (
