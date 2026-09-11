@@ -202,6 +202,7 @@ describe('get and remove', () => {
       share_packing: true,
       share_budget: false,
       share_collab: false,
+      share_edit: false,
     });
   });
 
@@ -253,7 +254,7 @@ describe('getSharedTripData', () => {
       ['cover_image', 'currency', 'description', 'end_date', 'id', 'start_date', 'title'],
     );
     expect(data.permissions).toEqual({
-      share_map: true, share_bookings: true, share_packing: true, share_budget: true, share_collab: true,
+      share_map: true, share_bookings: true, share_packing: true, share_budget: true, share_collab: true, share_edit: false,
     });
     expect(data.days).toHaveLength(1);
     const entries = data.assignments[day.id];

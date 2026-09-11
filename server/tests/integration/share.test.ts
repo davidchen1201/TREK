@@ -186,6 +186,87 @@ describe('Share link CRUD', () => {
 });
 
 describe('Shared trip access', () => {
+  it('SHARE-EDIT-001 — invalid, expired, read-only, and map-disabled links cannot change a day', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const day = createDay(testDb, trip.id, { title: 'Before' });
+
+    const invalid = await request(app).put(`/api/shared/no-such-token/days/${day.id}`).send({ title: 'Invalid' });
+    expect(invalid.status).toBe(404);
+
+    const created = await request(app)
+      .post(`/api/trips/${trip.id}/share-link`)
+      .set('Cookie', authCookie(user.id))
+      .send({});
+    const readonly = await request(app).put(`/api/shared/${created.body.token}/days/${day.id}`).send({ title: 'Read only' });
+    expect(readonly.status).toBe(404);
+
+    await request(app)
+      .post(`/api/trips/${trip.id}/share-link`)
+      .set('Cookie', authCookie(user.id))
+      .send({ share_edit: true, share_map: false });
+    const mapDisabled = await request(app).put(`/api/shared/${created.body.token}/days/${day.id}`).send({ title: 'No map' });
+    expect(mapDisabled.status).toBe(404);
+
+    await request(app)
+      .post(`/api/trips/${trip.id}/share-link`)
+      .set('Cookie', authCookie(user.id))
+      .send({ share_edit: true });
+    testDb.prepare('UPDATE share_tokens SET expires_at = ? WHERE token = ?').run(new Date(Date.now() - 60_000).toISOString(), created.body.token);
+    const expired = await request(app).put(`/api/shared/${created.body.token}/days/${day.id}`).send({ title: 'Expired' });
+    expect(expired.status).toBe(404);
+    expect(testDb.prepare('SELECT title FROM days WHERE id = ?').get(day.id)).toEqual({ title: 'Before' });
+  });
+
+  it('SHARE-EDIT-002 — an editable token cannot target another trip day or note', async () => {
+    const { user } = createUser(testDb);
+    const linkedTrip = createTrip(testDb, user.id);
+    const otherTrip = createTrip(testDb, user.id);
+    const linkedDay = createDay(testDb, linkedTrip.id);
+    const otherDay = createDay(testDb, otherTrip.id);
+    const otherNote = createDayNote(testDb, otherDay.id, otherTrip.id, { text: 'Private note' });
+    const created = await request(app)
+      .post(`/api/trips/${linkedTrip.id}/share-link`)
+      .set('Cookie', authCookie(user.id))
+      .send({ share_edit: true });
+    const token = created.body.token;
+
+    const day = await request(app).put(`/api/shared/${token}/days/${otherDay.id}`).send({ title: 'Cross trip' });
+    expect(day.status).toBe(404);
+    const note = await request(app).put(`/api/shared/${token}/days/${linkedDay.id}/notes/${otherNote.id}`).send({ text: 'Cross trip' });
+    expect(note.status).toBe(404);
+    expect(testDb.prepare('SELECT title FROM days WHERE id = ?').get(otherDay.id)).toEqual({ title: null });
+    expect(testDb.prepare('SELECT text FROM day_notes WHERE id = ?').get(otherNote.id)).toEqual({ text: 'Private note' });
+  });
+
+  it('SHARE-EDIT-003 — an editable link persists day and note changes', async () => {
+    const { user } = createUser(testDb);
+    const trip = createTrip(testDb, user.id);
+    const day = createDay(testDb, trip.id, { title: 'Before' });
+    const created = await request(app)
+      .post(`/api/trips/${trip.id}/share-link`)
+      .set('Cookie', authCookie(user.id))
+      .send({ share_edit: true });
+    const token = created.body.token;
+
+    const updatedDay = await request(app).put(`/api/shared/${token}/days/${day.id}`).send({ title: 'Morning plan' });
+    expect(updatedDay.status).toBe(200);
+    expect(updatedDay.body.day).toEqual(expect.objectContaining({ id: day.id, title: 'Morning plan' }));
+
+    const createdNote = await request(app).post(`/api/shared/${token}/days/${day.id}/notes`).send({ text: 'Bring tickets' });
+    expect(createdNote.status).toBe(201);
+    const noteId = createdNote.body.note.id;
+    const updatedNote = await request(app).put(`/api/shared/${token}/days/${day.id}/notes/${noteId}`).send({ text: 'Bring printed tickets' });
+    expect(updatedNote.status).toBe(200);
+    expect(updatedNote.body.note).toEqual(expect.objectContaining({ id: noteId, text: 'Bring printed tickets' }));
+
+    const removedNote = await request(app).delete(`/api/shared/${token}/days/${day.id}/notes/${noteId}`);
+    expect(removedNote.status).toBe(200);
+    expect(removedNote.body).toEqual({ success: true });
+    expect(testDb.prepare('SELECT title FROM days WHERE id = ?').get(day.id)).toEqual({ title: 'Morning plan' });
+    expect(testDb.prepare('SELECT id FROM day_notes WHERE id = ?').get(noteId)).toBeUndefined();
+  });
+
   it('SHARE-006 — GET /shared/:token returns trip data with all sections', async () => {
     const { user } = createUser(testDb);
     const trip = createTrip(testDb, user.id, { title: 'Paris Adventure' });

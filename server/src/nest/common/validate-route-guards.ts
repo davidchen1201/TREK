@@ -139,8 +139,12 @@ export const PUBLIC_ROUTE_ALLOW_LIST: string[] = [
   // Auth is per plugin route (route.auth in the manifest), asserted in the handler.
   'PluginsProxyController.proxy',
   // Share-token validated.
+  'SharedController.createDayNote',
   'SharedController.placePhotoBytes',
   'SharedController.read',
+  'SharedController.removeDayNote',
+  'SharedController.updateDay',
+  'SharedController.updateDayNote',
 ];
 
 /**

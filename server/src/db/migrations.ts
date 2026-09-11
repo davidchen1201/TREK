@@ -4257,6 +4257,16 @@ function runMigrations(db: Database.Database): void {
         db.exec('ALTER TABLE journey_entries ADD COLUMN stats_excluded INTEGER NOT NULL DEFAULT 0');
       }
     },
+    /**
+     * Public links remain view-only unless their owner explicitly enables
+     * itinerary edits. Existing links inherit the safe, read-only default.
+     */
+    () => {
+      const cols = db.prepare("SELECT name FROM pragma_table_info('share_tokens')").all() as Array<{ name: string }>;
+      if (!cols.some((c) => c.name === 'share_edit')) {
+        db.exec('ALTER TABLE share_tokens ADD COLUMN share_edit INTEGER NOT NULL DEFAULT 0');
+      }
+    },
   ];
 
   if (currentVersion < migrations.length) {

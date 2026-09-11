@@ -1,43 +1,39 @@
 import L from 'leaflet';
-import {
-  Bus,
-  Car,
-  Clock,
-  FileText,
-  Hotel,
-  Luggage,
-  Map,
-  MapPin,
-  MessageCircle,
-  Plane,
-  Ship,
-  Ticket,
-  Train,
-  Wallet,
-} from 'lucide-react';
+import { Bus, Car, Hotel, Luggage, Map, MessageCircle, Plane, Ship, Ticket, Train, Wallet } from 'lucide-react';
 import { createElement, useEffect, useRef } from 'react';
-import { renderIconMarkup } from '../utils/iconMarkup';
 import { MapContainer, Marker, Polyline, TileLayer, Tooltip, useMap } from 'react-leaflet';
-import { getCategoryIcon } from '../components/shared/categoryIcons';
-import PublicLanguagePicker from '../components/shared/PublicLanguagePicker';
-import { OFM_POSITRON, DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM, MAP_MAX_ZOOM, attributionForTile } from '../constants/mapDefaults';
+import Markdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import VectorBasemap from '../components/Map/VectorBasemap';
+import { getCategoryIcon } from '../components/shared/categoryIcons';
+import { sanitizedMarkdownComponents, sanitizedMarkdownPlugins } from '../components/shared/markdownSanitize';
+import PublicLanguagePicker from '../components/shared/PublicLanguagePicker';
+import {
+  attributionForTile,
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+  MAP_MAX_ZOOM,
+  OFM_POSITRON,
+} from '../constants/mapDefaults';
 import { useTranslation } from '../i18n';
 import { avatarSrc } from '../utils/avatarSrc';
-import { safeHexColor } from '../utils/safeColor';
-import { getMergedItems, getTransportForDay, hidesOnMiddleDay } from '../utils/dayMerge';
+import { getTransportForDay, hidesOnMiddleDay } from '../utils/dayMerge';
 import { isDayInAccommodationRange } from '../utils/dayOrder';
 import { getFlightLegs, getTrainLegs } from '../utils/flightLegs';
 import { splitReservationDateTime } from '../utils/formatters';
+import { renderIconMarkup } from '../utils/iconMarkup';
 import { computeMapViewport, TILE_SIZE_RASTER } from '../utils/mapViewport';
+import { safeHexColor } from '../utils/safeColor';
 import { resolveBasemap } from '../utils/tileUrl';
+import { AddSharedNote, DayChevron, EditableDayTitle, EditableSharedNote } from './sharedTrip/SharedItineraryEditor';
 import { useSharedTrip } from './sharedTrip/useSharedTrip';
 
 const TRANSPORT_ICONS = { flight: Plane, train: Train, bus: Bus, car: Car, cruise: Ship };
 
 // Injected into Leaflet's marker HTML, where CSS variables cannot reach - the same
 // reason MapView.tsx is exempt from theme:lint outright.
-const ORDER_BADGE_STYLE = 'position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;padding:0 3px;background:rgba(255,255,255,0.94);border:1.5px solid rgba(0,0,0,0.15);box-shadow:0 1px 4px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;font-weight:800;color:#111827;line-height:1;box-sizing:border-box;white-space:nowrap;'; // theme-lint-disable
+const ORDER_BADGE_STYLE =
+  'position:absolute;bottom:-4px;right:-4px;min-width:16px;height:16px;border-radius:8px;padding:0 3px;background:rgba(255,255,255,0.94);border:1.5px solid rgba(0,0,0,0.15);box-shadow:0 1px 4px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;font-weight:800;color:#111827;line-height:1;box-sizing:border-box;white-space:nowrap;'; // theme-lint-disable
 
 function createMarkerIcon(place: any, orderNumbers?: number[] | null) {
   const cat = place.category;
@@ -99,6 +95,11 @@ export default function SharedTripPage() {
     setActiveTab,
     showLangPicker,
     setShowLangPicker,
+    editable,
+    updateDay,
+    createDayNote,
+    updateDayNote,
+    deleteDayNote,
   } = useSharedTrip();
 
   if (error)
@@ -155,6 +156,20 @@ export default function SharedTripPage() {
     cartoApiKey,
   } = data;
   const sortedDays = [...(days || [])].sort((a: any, b: any) => a.day_number - b.day_number);
+  const displayChinese =
+    locale.toLowerCase().startsWith('zh') ||
+    /[\u4e00-\u9fff]/.test(
+      [
+        trip.title,
+        trip.description,
+        ...Object.values(dayNotes || {})
+          .flat()
+          .map((note: any) => note.text),
+      ]
+        .filter(Boolean)
+        .join(' ')
+    );
+  const displayLocale = displayChinese ? 'zh-CN' : locale;
 
   // Map places. In day mode each stop carries its position in the day's order; the
   // trip-wide pool has none (it arrives by created_at). The index runs over the full
@@ -194,13 +209,16 @@ export default function SharedTripPage() {
   const basemap = resolveBasemap(null, OFM_POSITRON, cartoApiKey);
 
   return (
-    <div className="bg-surface-secondary" style={{ minHeight: '100vh', fontFamily: 'var(--font-system)' }}>
+    <div
+      className="bg-surface-secondary"
+      style={{ minHeight: '100vh', fontFamily: 'var(--font-system)', background: '#f7f5ef' }}
+    >
       {/* Header */}
       <div
         className="text-white"
         style={{
-          background: 'linear-gradient(135deg, #000 0%, #0f172a 50%, #1e293b 100%)',
-          padding: '32px 20px 28px',
+          background: 'linear-gradient(120deg, #173d35 0%, #2e6253 55%, #6d8261 100%)',
+          padding: '24px 20px 22px',
           textAlign: 'center',
           position: 'relative',
         }}
@@ -261,27 +279,31 @@ export default function SharedTripPage() {
 
         <h1
           style={{
-            margin: '0 0 4px',
-            fontSize: 'calc(26px * var(--fs-scale-title, 1))',
-            fontWeight: 700,
-            letterSpacing: -0.5,
+            position: 'relative',
+            margin: '0 auto 4px',
+            maxWidth: 760,
+            fontSize: 'clamp(28px, 5vw, 42px)',
+            lineHeight: 1.12,
+            fontWeight: 760,
+            letterSpacing: '-0.04em',
           }}
         >
           {trip.title}
         </h1>
 
-        {trip.description && (
-          <div
+        {trip.description && trip.description.length <= 240 && (
+          <p
             style={{
-              fontSize: 'calc(13px * var(--fs-scale-body, 1))',
-              opacity: 0.5,
-              maxWidth: 400,
-              margin: '0 auto',
-              lineHeight: 1.5,
+              position: 'relative',
+              fontSize: '16px',
+              opacity: 0.76,
+              maxWidth: 650,
+              margin: '12px auto 0',
+              lineHeight: 1.6,
             }}
           >
             {trip.description}
-          </div>
+          </p>
         )}
 
         {(trip.start_date || trip.end_date) && (
@@ -298,7 +320,7 @@ export default function SharedTripPage() {
               border: '1px solid rgba(255,255,255,0.08)',
             }}
           >
-            <span style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500, opacity: 0.8 }}>
+            <span style={{ fontSize: '14px', fontWeight: 500, opacity: 0.8 }}>
               {[trip.start_date, trip.end_date]
                 .filter(Boolean)
                 .map((d: string) =>
@@ -332,13 +354,42 @@ export default function SharedTripPage() {
             opacity: 0.25,
           }}
         >
-          {t('shared.readOnly')}
+          {editable
+            ? locale.toLowerCase().startsWith('zh')
+              ? '可编辑行程'
+              : 'Editable itinerary'
+            : t('shared.readOnly')}
         </div>
 
         <PublicLanguagePicker locale={locale} open={showLangPicker} onOpenChange={setShowLangPicker} />
       </div>
 
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: '20px 16px' }}>
+      <div style={{ maxWidth: 980, margin: '0 auto', padding: '20px 16px 36px' }}>
+        {trip.description && trip.description.length > 240 && (
+          <details
+            style={{
+              marginBottom: 18,
+              padding: '14px 18px',
+              background: '#fff',
+              border: '1px solid #e2e8f0',
+              borderRadius: 14,
+              boxShadow: '0 2px 10px rgba(15,23,42,.04)',
+            }}
+          >
+            <summary style={{ cursor: 'pointer', fontSize: 16, fontWeight: 720, color: '#1e293b' }}>
+              {displayChinese ? '行程资料' : 'Trip details'}
+            </summary>
+            <div style={{ marginTop: 12, fontSize: 16, lineHeight: 1.75, color: '#475569' }}>
+              <Markdown
+                remarkPlugins={[remarkGfm]}
+                rehypePlugins={sanitizedMarkdownPlugins}
+                components={sanitizedMarkdownComponents}
+              >
+                {trip.description}
+              </Markdown>
+            </div>
+          </details>
+        )}
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', padding: '2px 0' }}>
           {[
@@ -348,7 +399,8 @@ export default function SharedTripPage() {
             ...(permissions?.share_budget ? [{ id: 'budget', label: t('shared.tabBudget'), Icon: Wallet }] : []),
             ...(permissions?.share_collab ? [{ id: 'collab', label: t('shared.tabChat'), Icon: MessageCircle }] : []),
           ].map((tab) => (
-            <button type="button"
+            <button
+              type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={activeTab === tab.id ? 'bg-[#111827] text-white' : 'bg-surface-card text-[#6b7280]'}
@@ -382,22 +434,37 @@ export default function SharedTripPage() {
                 the expanded day can never disagree. Without it the only way to narrow the
                 map down was a control 300px further down the page. */}
             {sortedDays.length > 0 && (
-              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 10, padding: '2px 0' }}>
-                {[null, ...sortedDays.map((d: any) => d.id)].map((id: number | null, i: number) => {
+              <div
+                style={{
+                  position: 'sticky',
+                  top: 0,
+                  zIndex: 5,
+                  display: 'flex',
+                  gap: 7,
+                  overflowX: 'auto',
+                  margin: '0 -16px 14px',
+                  padding: '10px 16px',
+                  background: 'rgba(247,245,239,.94)',
+                  backdropFilter: 'blur(12px)',
+                  borderBottom: '1px solid #e7e3d9',
+                }}
+              >
+                {sortedDays.map((day: any) => {
+                  const id = day.id;
                   const active = selectedDay === id;
                   return (
                     <button
-                      key={id ?? 'all'}
+                      key={id}
                       type="button"
                       onClick={() => setSelectedDay(id)}
                       aria-pressed={active}
                       // Same literals as the day-number circle below. This page pins itself
                       // to the light neutral look (applyAppearance skips /shared/*), so a
                       // token here would not be value-equal to the rest of the card.
-                      className={active ? 'bg-[#111827] text-white' : 'bg-[#f3f4f6] text-[#6b7280]'} // theme-lint-disable
+                      className={active ? 'bg-[#1f5b4e] text-white' : 'bg-[#f3f4f6] text-[#6b7280]'} // theme-lint-disable
                       style={{
-                        padding: '5px 12px',
-                        borderRadius: 999,
+                        padding: '8px 13px',
+                        borderRadius: 11,
                         border: 'none',
                         cursor: 'pointer',
                         whiteSpace: 'nowrap',
@@ -407,58 +474,60 @@ export default function SharedTripPage() {
                         fontSize: 'calc(12px * var(--fs-scale-body, 1))',
                       }}
                     >
-                      {id === null ? t('day.allDays') : t('dayplan.dayN', { n: sortedDays[i - 1].day_number })}
+                      {`${t('dayplan.dayN', { n: day.day_number })}${day.date ? ` · ${new Date(day.date + 'T00:00:00Z').toLocaleDateString(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' })}` : ''}`}
                     </button>
                   );
                 })}
               </div>
             )}
-            <div
-              style={{
-                borderRadius: 16,
-                overflow: 'hidden',
-                height: 300,
-                marginBottom: 20,
-                boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
-              }}
-            >
-              <MapContainer
-                center={initialView.center}
-                zoom={initialView.zoom}
-                zoomControl={false}
-                // Same reason as the planner map: a vector basemap contributes
-                // no zoom ceiling, and fitBounds below asks for one.
-                maxZoom={MAP_MAX_ZOOM}
-                style={{ width: '100%', height: '100%' }}
+            {mapPlaces.length > 0 && (
+              <div
+                style={{
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  height: 300,
+                  marginBottom: 20,
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.08)',
+                }}
               >
-                {basemap.kind === 'vector' ? (
-                  <VectorBasemap style={basemap.style} />
-                ) : (
-                  <TileLayer
-                    url={basemap.url}
-                    attribution={attributionForTile(basemap.url)}
-                    referrerPolicy="strict-origin-when-cross-origin"
-                  />
-                )}
-                <FitBoundsToPlaces places={mapPlaces} framedOnMount={framed !== null} />
-                {selectedDay && mapPlaces.length > 1 && (
-                  <Polyline
-                    positions={mapPlaces.map((p: any) => [p.lat, p.lng])}
-                    // Dashed and straight on purpose: it shows the order of the day's stops,
-                    // not the roads between them. A real route would mean sending the
-                    // itinerary to a third party for every anonymous visitor of a shared
-                    // link, with no way for the trip's owner to opt out.
-                    pathOptions={{ color: '#0a84ff', weight: 3, opacity: 0.8, dashArray: '6 8', lineCap: 'round' }} // theme-lint-disable
-                    interactive={false}
-                  />
-                )}
-                {mapPlaces.map((p: any) => (
-                  <Marker key={p.id} position={[p.lat, p.lng]} icon={createMarkerIcon(p, dayOrderMap[p.id] ?? null)}>
-                    <Tooltip>{p.name}</Tooltip>
-                  </Marker>
-                ))}
-              </MapContainer>
-            </div>
+                <MapContainer
+                  center={initialView.center}
+                  zoom={initialView.zoom}
+                  zoomControl={false}
+                  // Same reason as the planner map: a vector basemap contributes
+                  // no zoom ceiling, and fitBounds below asks for one.
+                  maxZoom={MAP_MAX_ZOOM}
+                  style={{ width: '100%', height: '100%' }}
+                >
+                  {basemap.kind === 'vector' ? (
+                    <VectorBasemap style={basemap.style} />
+                  ) : (
+                    <TileLayer
+                      url={basemap.url}
+                      attribution={attributionForTile(basemap.url)}
+                      referrerPolicy="strict-origin-when-cross-origin"
+                    />
+                  )}
+                  <FitBoundsToPlaces places={mapPlaces} framedOnMount={framed !== null} />
+                  {selectedDay && mapPlaces.length > 1 && (
+                    <Polyline
+                      positions={mapPlaces.map((p: any) => [p.lat, p.lng])}
+                      // Dashed and straight on purpose: it shows the order of the day's stops,
+                      // not the roads between them. A real route would mean sending the
+                      // itinerary to a third party for every anonymous visitor of a shared
+                      // link, with no way for the trip's owner to opt out.
+                      pathOptions={{ color: '#0a84ff', weight: 3, opacity: 0.8, dashArray: '6 8', lineCap: 'round' }} // theme-lint-disable
+                      interactive={false}
+                    />
+                  )}
+                  {mapPlaces.map((p: any) => (
+                    <Marker key={p.id} position={[p.lat, p.lng]} icon={createMarkerIcon(p, dayOrderMap[p.id] ?? null)}>
+                      <Tooltip>{p.name}</Tooltip>
+                    </Marker>
+                  ))}
+                </MapContainer>
+              </div>
+            )}
 
             {/* Day Plan */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -479,333 +548,277 @@ export default function SharedTripPage() {
                   isDayInAccommodationRange(day, a.start_day_id, a.end_day_id, sortedDays)
                 );
 
-                // The shared link has to say what the app says: a multi-day parking only
-                // shows up on its drop-off and pickup day (#1937). Filtered here rather
-                // than skipped in the loop below so the day body isn't gated open on a
-                // row that never renders.
-                const merged = getMergedItems({
-                  dayAssignments: da,
-                  dayNotes: notes,
-                  dayTransports: dayTransport,
-                  dayId: day.id,
-                }).filter(item => !(item.type === 'transport' && hidesOnMiddleDay(item.data, day.id)));
+                const visibleTransport = dayTransport.filter((item: any) => !hidesOnMiddleDay(item, day.id));
+                const isChinese = displayChinese;
 
                 return (
                   <div
                     key={day.id}
                     className="border border-edge-faint bg-surface-card"
-                    style={{ borderRadius: 14, overflow: 'hidden' }}
+                    style={{
+                      borderRadius: 18,
+                      overflow: 'hidden',
+                      borderColor: '#e2e8df',
+                      boxShadow: '0 5px 16px rgba(35,55,45,.06)',
+                    }}
                   >
-                    <button
-                      type="button"
-                      onClick={() => setSelectedDay(selectedDay === day.id ? null : day.id)}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedDay(day.id)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') setSelectedDay(day.id);
+                      }}
                       aria-expanded={selectedDay === day.id}
                       style={{
-                        padding: '12px 16px',
+                        padding: '18px 20px',
                         cursor: 'pointer',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: 10,
+                        gap: 13,
                         width: '100%',
-                        background: 'none',
-                        border: 'none',
+                        background: 'linear-gradient(90deg, #ffffff, #f8fafc)',
                         textAlign: 'left',
                         fontFamily: 'inherit',
                       }}
                     >
                       <div
-                        className={selectedDay === day.id ? 'bg-[#111827] text-white' : 'bg-[#f3f4f6] text-[#6b7280]'}
                         style={{
-                          width: 28,
-                          height: 28,
-                          borderRadius: '50%',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          fontSize: 'calc(12px * var(--fs-scale-body, 1))',
-                          fontWeight: 700,
+                          width: 38,
+                          height: 38,
+                          borderRadius: 12,
+                          display: 'grid',
+                          placeItems: 'center',
+                          background: selectedDay === day.id ? '#1f5b4e' : '#e8eef6',
+                          color: selectedDay === day.id ? '#fff' : '#475569',
+                          fontSize: 14,
+                          fontWeight: 800,
                           flexShrink: 0,
                         }}
                       >
                         {di + 1}
                       </div>
-                      {/* `flex: 1` alone gives this block a base size of 0, so the moment an
-                          accommodation chip pushes the row over the available width it freezes
-                          at its min-content width — a ~37px column with one word, or one CJK
-                          character, per line (#1955). Base auto plus minWidth 0 lets it shrink
-                          proportionally and truncate instead. */}
                       <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-                        <div
-                          className="text-[#111827]"
-                          style={{
-                            fontSize: 'calc(14px * var(--fs-scale-body, 1))',
-                            fontWeight: 600,
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {day.title || t('dayplan.dayN', { n: day.day_number })}
-                        </div>
+                        <EditableDayTitle
+                          day={day}
+                          editable={editable}
+                          locale={locale}
+                          onSave={(title) => updateDay(day.id, title)}
+                        />
                         {day.date && (
-                          <div
-                            className="text-[#9ca3af]"
-                            style={{
-                              fontSize: 'calc(11px * var(--fs-scale-caption, 1))',
-                              marginTop: 1,
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
+                          <div style={{ color: '#64748b', fontSize: 14, marginTop: 3, fontWeight: 550 }}>
                             {new Date(day.date + 'T00:00:00Z').toLocaleDateString(locale, {
-                              weekday: 'short',
+                              weekday: 'long',
                               day: 'numeric',
-                              month: 'short',
+                              month: 'long',
                               timeZone: 'UTC',
                             })}
                           </div>
                         )}
                       </div>
-                      {dayAccs.map((acc: any) => (
+                      {dayAccs.slice(0, 1).map((acc: any) => (
                         <span
                           key={acc.id}
-                          className="bg-[#f3f4f6] text-[#6b7280]"
                           style={{
-                            fontSize: 'calc(10.5px * var(--fs-scale-caption, 1))',
-                            padding: '2px 6px',
-                            borderRadius: 4,
+                            padding: '5px 8px',
+                            borderRadius: 8,
+                            background: '#eff6ff',
+                            color: '#1d4ed8',
                             display: 'flex',
                             alignItems: 'center',
                             gap: 4,
-                            minWidth: 0,
+                            fontSize: 12,
+                            fontWeight: 650,
+                            maxWidth: 160,
                           }}
                         >
-                          <Hotel size={11} style={{ flexShrink: 0 }} />
-                          {/* Own span: text-overflow needs a block container, and the chip
-                              itself is a flex container. */}
+                          <Hotel size={13} />
                           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {acc.place_name}
                           </span>
                         </span>
                       ))}
                       <span
-                        className="text-[#9ca3af]"
-                        style={{ fontSize: 'calc(11px * var(--fs-scale-caption, 1))', flexShrink: 0, whiteSpace: 'nowrap' }}
+                        style={{ color: '#64748b', fontSize: 13, fontWeight: 650, flexShrink: 0, whiteSpace: 'nowrap' }}
                       >
                         {dayPlaceCount} {t('shared.places')}
                       </span>
-                    </button>
+                      <DayChevron open={selectedDay === day.id} />
+                    </div>
 
-                    {selectedDay === day.id && merged.length > 0 && (
-                      <div style={{ padding: '0 16px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                        {merged.map((item: any) => {
-                          if (item.type === 'transport') {
-                            const r = item.data;
-                            const TIcon = TRANSPORT_ICONS[r.type] || Ticket;
-                            const meta =
-                              typeof r.metadata === 'string' ? JSON.parse(r.metadata || '{}') : r.metadata || {};
-                            const time = splitReservationDateTime(r.reservation_time).time ?? '';
-                            const endTime = splitReservationDateTime(r.reservation_end_time).time ?? '';
-                            let sub = '';
-                            if (r.type === 'flight') {
-                              if (r.__leg) {
-                                // One leg of a multi-leg flight — show this segment's own route/flight number.
-                                sub = [
-                                  r.__leg.airline,
-                                  r.__leg.flight_number,
-                                  r.__leg.from || r.__leg.to
-                                    ? [r.__leg.from, r.__leg.to].filter(Boolean).join(' → ')
-                                    : '',
-                                ]
-                                  .filter(Boolean)
-                                  .join(' · ');
-                              } else {
-                                sub = [
-                                  meta.airline,
-                                  meta.flight_number,
-                                  meta.departure_airport && meta.arrival_airport
-                                    ? `${meta.departure_airport} → ${meta.arrival_airport}`
-                                    : '',
-                                ]
-                                  .filter(Boolean)
-                                  .join(' · ');
-                              }
-                            } else if (r.type === 'train') {
-                              if (r.__leg) {
-                                // One leg of a multi-leg train — show this segment's own train/route.
-                                sub = [
-                                  r.__leg.train_number,
-                                  r.__leg.platform ? `Gl. ${r.__leg.platform}` : '',
-                                  r.__leg.from || r.__leg.to
-                                    ? [r.__leg.from, r.__leg.to].filter(Boolean).join(' → ')
-                                    : '',
-                                ]
-                                  .filter(Boolean)
-                                  .join(' · ');
-                              } else {
-                                sub = [meta.train_number, meta.platform ? `Gl. ${meta.platform}` : '']
-                                  .filter(Boolean)
-                                  .join(' · ');
-                              }
-                            }
-                            return (
-                              <div
-                                key={r.__leg ? `t-${r.id}-leg${r.__leg.index}` : `t-${r.id}`}
-                                className="bg-[rgba(59,130,246,0.06)]"
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 8,
-                                  padding: '6px 8px',
-                                  borderRadius: 6,
-                                  border: '1px solid rgba(59,130,246,0.15)',
-                                }}
-                              >
-                                <div
-                                  className="bg-[rgba(59,130,246,0.12)]"
-                                  style={{
-                                    width: 24,
-                                    height: 24,
-                                    borderRadius: '50%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  <TIcon size={12} color="#3b82f6" />
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div
-                                    className="text-[#111827]"
-                                    style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))', fontWeight: 500 }}
-                                  >
-                                    {r.title}
-                                    {time ? ` · ${time}${endTime ? `–${endTime}` : ''}` : ''}
-                                  </div>
-                                  {sub && (
-                                    <div
-                                      className="text-[#6b7280]"
-                                      style={{ fontSize: 'calc(10px * var(--fs-scale-caption, 1))' }}
-                                    >
-                                      {sub}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          }
-                          if (item.type === 'note') {
-                            return (
-                              <div
-                                key={`n-${item.data.id}`}
-                                className="bg-[#f9fafb]"
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 8,
-                                  padding: '5px 8px',
-                                  borderRadius: 6,
-                                  border: '1px solid #f3f4f6',
-                                }}
-                              >
-                                <FileText size={12} color="#9ca3af" />
-                                <div>
-                                  <div
-                                    className="text-[#374151]"
-                                    style={{ fontSize: 'calc(12px * var(--fs-scale-body, 1))' }}
-                                  >
-                                    {item.data.text}
-                                  </div>
-                                  {item.data.time && (
-                                    <div
-                                      className="text-[#9ca3af]"
-                                      style={{ fontSize: 'calc(10px * var(--fs-scale-caption, 1))' }}
-                                    >
-                                      {item.data.time}
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            );
-                          }
-                          const place = item.data.place;
-                          if (!place) return null;
-                          const cat = categories?.find((c: any) => c.id === place.category_id);
-                          return (
+                    {selectedDay === day.id && (
+                      <div style={{ padding: '0 20px 20px', display: 'flex', flexDirection: 'column', gap: 17 }}>
+                        {da.filter((assignment: any) => assignment.place).length > 0 && (
+                          <section aria-label={isChinese ? '每日地点' : 'Places for the day'}>
                             <div
-                              key={`p-${item.data.id}`}
                               style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 10,
-                                padding: '6px 8px',
-                                borderRadius: 6,
+                                color: '#64748b',
+                                fontSize: 13,
+                                fontWeight: 800,
+                                letterSpacing: '.08em',
+                                marginBottom: 9,
                               }}
                             >
-                              <div
-                                style={{
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: '50%',
-                                  background: cat?.color || '#6366f1',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  flexShrink: 0,
-                                }}
-                              >
-                                {place.image_url ? (
-                                  <img
-                                    src={place.image_url}
-                                    alt=""
-                                    style={{ width: 28, height: 28, borderRadius: '50%', objectFit: 'cover' }}
-                                  />
-                                ) : (
-                                  <MapPin size={13} color="white" />
-                                )}
-                              </div>
-                              <div style={{ flex: 1, minWidth: 0 }}>
-                                <div
-                                  className="text-[#111827]"
-                                  style={{ fontSize: 'calc(12.5px * var(--fs-scale-body, 1))', fontWeight: 500 }}
-                                >
-                                  {place.name}
-                                </div>
-                                {(place.address || place.description) && (
+                              {isChinese ? '每日地点' : 'DAILY PLACES'}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                              {da
+                                .filter((assignment: any) => assignment.place)
+                                .map((assignment: any) => {
+                                  const place = assignment.place;
+                                  const category = categories?.find((item: any) => item.id === place.category_id);
+                                  return (
+                                    <a
+                                      key={assignment.id}
+                                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([place.name, place.address].filter(Boolean).join(' '))}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      style={{
+                                        display: 'inline-flex',
+                                        maxWidth: '100%',
+                                        alignItems: 'center',
+                                        gap: 7,
+                                        padding: '8px 10px',
+                                        color: '#1e293b',
+                                        background: '#fff',
+                                        border: '1px solid #dbe3ee',
+                                        borderRadius: 10,
+                                        textDecoration: 'none',
+                                        boxShadow: '0 1px 3px rgba(15,23,42,.04)',
+                                        fontSize: 14,
+                                        fontWeight: 650,
+                                      }}
+                                    >
+                                      <span
+                                        style={{
+                                          width: 8,
+                                          height: 8,
+                                          borderRadius: 99,
+                                          background: category?.color || place.category?.color || '#6366f1',
+                                          flexShrink: 0,
+                                        }}
+                                      />
+                                      <span
+                                        style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                                      >
+                                        {place.name}
+                                      </span>
+                                    </a>
+                                  );
+                                })}
+                            </div>
+                          </section>
+                        )}
+                        {visibleTransport.length > 0 && (
+                          <section aria-label={isChinese ? '出行' : 'Travel'}>
+                            <div
+                              style={{
+                                color: '#64748b',
+                                fontSize: 13,
+                                fontWeight: 800,
+                                letterSpacing: '.08em',
+                                marginBottom: 9,
+                              }}
+                            >
+                              {isChinese ? '出行安排' : 'TRAVEL'}
+                            </div>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                              {visibleTransport.map((reservation: any) => {
+                                const Icon = TRANSPORT_ICONS[reservation.type] || Ticket;
+                                const time = splitReservationDateTime(reservation.reservation_time).time;
+                                return (
                                   <div
-                                    className="text-[#9ca3af]"
+                                    key={
+                                      reservation.__leg
+                                        ? `${reservation.id}-${reservation.__leg.index}`
+                                        : reservation.id
+                                    }
                                     style={{
-                                      fontSize: 'calc(10px * var(--fs-scale-caption, 1))',
-                                      overflow: 'hidden',
-                                      textOverflow: 'ellipsis',
-                                      whiteSpace: 'nowrap',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 7,
+                                      padding: '8px 10px',
+                                      borderRadius: 10,
+                                      background: '#eff6ff',
+                                      color: '#1e40af',
+                                      fontSize: 14,
+                                      fontWeight: 650,
                                     }}
                                   >
-                                    {place.address || place.description}
+                                    <Icon size={15} />
+                                    {reservation.title}
+                                    {time ? ` · ${time}` : ''}
                                   </div>
-                                )}
-                              </div>
-                              {place.place_time && (
-                                <span
-                                  className="text-[#6b7280]"
-                                  style={{
-                                    fontSize: 'calc(10px * var(--fs-scale-caption, 1))',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: 3,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  <Clock size={9} />
-                                  {place.place_time}
-                                  {place.end_time ? ` – ${place.end_time}` : ''}
-                                </span>
-                              )}
+                                );
+                              })}
                             </div>
-                          );
-                        })}
+                          </section>
+                        )}
+                        <section aria-label={isChinese ? '日程清单' : 'Schedule checklist'}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'baseline',
+                              justifyContent: 'space-between',
+                              gap: 10,
+                              marginBottom: 9,
+                            }}
+                          >
+                            <div style={{ color: '#64748b', fontSize: 13, fontWeight: 800, letterSpacing: '.08em' }}>
+                              {isChinese ? '日程清单' : 'SCHEDULE'}
+                            </div>
+                            <div style={{ color: '#94a3b8', fontSize: 13 }}>
+                              {notes.length} {isChinese ? '项' : 'items'}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                            {notes.map((note: any) => (
+                              <EditableSharedNote
+                                key={note.id}
+                                note={note}
+                                editable={editable}
+                                locale={locale}
+                                onSave={(patch) =>
+                                  updateDayNote(day.id, note.id, {
+                                    ...patch,
+                                    icon: note.icon,
+                                    sort_order: note.sort_order,
+                                    color: note.color,
+                                  })
+                                }
+                                onDelete={() => deleteDayNote(day.id, note.id)}
+                              />
+                            ))}
+                            {notes.length === 0 && !editable && (
+                              <div
+                                style={{
+                                  color: '#64748b',
+                                  background: '#f8fafc',
+                                  padding: '14px',
+                                  borderRadius: 11,
+                                  fontSize: 15,
+                                }}
+                              >
+                                {isChinese ? '当天还没有日程项目。' : 'No scheduled items for this day yet.'}
+                              </div>
+                            )}
+                            {editable && (
+                              <AddSharedNote
+                                locale={locale}
+                                onAdd={(text, time) =>
+                                  createDayNote(day.id, {
+                                    text: `[ ] ${text}`,
+                                    time: time || null,
+                                    icon: '📝',
+                                    sort_order:
+                                      Math.max(0, ...notes.map((note: any) => Number(note.sort_order) || 0)) + 1,
+                                    color: null,
+                                  })
+                                }
+                              />
+                            )}
+                          </div>
+                        </section>
                       </div>
                     )}
                   </div>
@@ -924,7 +937,15 @@ export default function SharedTripPage() {
 
         {/* Packing */}
         {activeTab === 'packing' && (packing || []).length > 0 && (
-          <div className="border border-edge-faint bg-surface-card" style={{ borderRadius: 14, overflow: 'hidden' }}>
+          <div
+            className="border border-edge-faint bg-surface-card"
+            style={{
+              borderRadius: 18,
+              overflow: 'hidden',
+              borderColor: '#e2e8df',
+              boxShadow: '0 5px 16px rgba(35,55,45,.06)',
+            }}
+          >
             {Object.entries(
               (packing || []).reduce((g: any, i: any) => {
                 const c = i.category || t('shared.other');
@@ -1076,7 +1097,15 @@ export default function SharedTripPage() {
 
         {/* Collab Chat */}
         {activeTab === 'collab' && (collab || []).length > 0 && (
-          <div className="border border-edge-faint bg-surface-card" style={{ borderRadius: 14, overflow: 'hidden' }}>
+          <div
+            className="border border-edge-faint bg-surface-card"
+            style={{
+              borderRadius: 18,
+              overflow: 'hidden',
+              borderColor: '#e2e8df',
+              boxShadow: '0 5px 16px rgba(35,55,45,.06)',
+            }}
+          >
             <div
               className="bg-[#f9fafb]"
               style={{

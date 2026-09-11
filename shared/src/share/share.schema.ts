@@ -5,7 +5,9 @@ import { z } from 'zod';
  *
  * Owner/members create a public read-only token for a trip under
  * /api/trips/:tripId/share-link (gated by 'share_manage'); anyone can read the
- * shared snapshot at /api/shared/:token (no auth). The per-section toggles
+ * shared snapshot at /api/shared/:token (no auth). `share_edit` deliberately
+ * defaults off: when enabled together with `share_map`, a holder may edit the
+ * itinerary days and their notes without an account. The per-section toggles
  * default server-side (map/bookings on, packing/budget/collab off), so every
  * field is optional here.
  */
@@ -15,5 +17,6 @@ export const shareLinkRequestSchema = z.object({
   share_packing: z.boolean().optional(),
   share_budget: z.boolean().optional(),
   share_collab: z.boolean().optional(),
+  share_edit: z.boolean().optional(),
 });
 export type ShareLinkRequest = z.infer<typeof shareLinkRequestSchema>;

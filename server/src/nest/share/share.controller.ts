@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, HttpException, Param, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Headers, HttpException, Param, Post, Put, Res, UseGuards } from '@nestjs/common';
 import type { Response } from 'express';
 import type { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
@@ -10,6 +10,10 @@ import { ShareLinkDto } from './share.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
 import { Public } from '../auth/public.decorator';
+import { DaysService } from '../days/days.service';
+import { DayUpdateDto } from '../days/days.dto';
+import { DayNotesService } from '../day-notes/day-notes.service';
+import { DayNoteCreateDto, DayNoteUpdateDto } from '../day-notes/day-notes.dto';
 
 /**
  * /api/trips/:tripId/share-link — manage a trip's public read-only share token.
@@ -48,6 +52,7 @@ export class TripShareController {
       share_packing: body.share_packing,
       share_budget: body.share_budget,
       share_collab: body.share_collab,
+      share_edit: body.share_edit,
     });
     // 201 only on first creation; an update answers 200, mirroring the legacy route.
     res.status(result.created ? 201 : 200);
@@ -75,8 +80,9 @@ export class TripShareController {
 }
 
 /**
- * GET /api/shared/:token — public, unauthenticated read-only trip snapshot.
- * Deliberately NOT behind a guard; an invalid/expired token answers 404.
+ * /api/shared/:token — public, unauthenticated share-token routes. Reads are
+ * read-only by default; the day/note writes below require the share link's
+ * explicit share_edit capability as well as share_map.
  */
 @Public('share-token validated: a shared trip link has to work for somebody without an account')
 @Controller('api/shared')
@@ -84,7 +90,17 @@ export class SharedController {
   constructor(
     private readonly share: ShareService,
     private readonly storage: StorageService,
+    private readonly days: DaysService,
+    private readonly notes: DayNotesService,
   ) {}
+
+  private editableTripId(token: string): string {
+    const tripId = this.share.getEditableTripId(token);
+    if (tripId === null) {
+      throw new HttpException({ error: 'Invalid or read-only link' }, 404);
+    }
+    return String(tripId);
+  }
 
   /**
    * Public, token-scoped place-photo proxy. The shared payload rewrites place
@@ -149,5 +165,75 @@ export class SharedController {
       throw new HttpException({ error: 'Invalid or expired link' }, 404);
     }
     return data;
+  }
+
+  @Put(':token/days/:dayId')
+  updateDay(
+    @Param('token') token: string,
+    @Param('dayId') dayId: string,
+    @Body() body: DayUpdateDto,
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    const tripId = this.editableTripId(token);
+    const current = this.days.getDay(dayId, tripId);
+    if (!current) {
+      throw new HttpException({ error: 'Day not found' }, 404);
+    }
+    const day = this.days.update(dayId, current, body);
+    this.days.broadcast(tripId, 'day:updated', { day }, socketId);
+    return { day };
+  }
+
+  @Post(':token/days/:dayId/notes')
+  createDayNote(
+    @Param('token') token: string,
+    @Param('dayId') dayId: string,
+    @Body() body: DayNoteCreateDto,
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    const tripId = this.editableTripId(token);
+    if (!this.notes.dayExists(dayId, tripId)) {
+      throw new HttpException({ error: 'Day not found' }, 404);
+    }
+    if (!body.text?.trim()) {
+      throw new HttpException({ error: 'Text required' }, 400);
+    }
+    const note = this.notes.create(dayId, tripId, body.text, body.time, body.icon, body.sort_order, body.color);
+    this.notes.broadcast(tripId, 'dayNote:created', { dayId: Number(dayId), note }, socketId);
+    return { note };
+  }
+
+  @Put(':token/days/:dayId/notes/:noteId')
+  updateDayNote(
+    @Param('token') token: string,
+    @Param('dayId') dayId: string,
+    @Param('noteId') noteId: string,
+    @Body() body: DayNoteUpdateDto,
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    const tripId = this.editableTripId(token);
+    const current = this.notes.getNote(noteId, dayId, tripId);
+    if (!current) {
+      throw new HttpException({ error: 'Note not found' }, 404);
+    }
+    const note = this.notes.update(noteId, current, body);
+    this.notes.broadcast(tripId, 'dayNote:updated', { dayId: Number(dayId), note }, socketId);
+    return { note };
+  }
+
+  @Delete(':token/days/:dayId/notes/:noteId')
+  removeDayNote(
+    @Param('token') token: string,
+    @Param('dayId') dayId: string,
+    @Param('noteId') noteId: string,
+    @Headers('x-socket-id') socketId?: string,
+  ) {
+    const tripId = this.editableTripId(token);
+    if (!this.notes.getNote(noteId, dayId, tripId)) {
+      throw new HttpException({ error: 'Note not found' }, 404);
+    }
+    this.notes.remove(noteId);
+    this.notes.broadcast(tripId, 'dayNote:deleted', { noteId: Number(noteId), dayId: Number(dayId) }, socketId);
+    return { success: true };
   }
 }

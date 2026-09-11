@@ -56,13 +56,14 @@ export class ShareMcp {
       share_packing: z.boolean().optional().default(false).describe('Share packing list'),
       share_budget: z.boolean().optional().default(false).describe('Share budget'),
       share_collab: z.boolean().optional().default(false).describe('Share collab messages'),
+      share_edit: z.boolean().optional().default(false).describe('Allow guests to edit itinerary days and notes'),
     },
     annotations: TOOL_ANNOTATIONS_WRITE,
     access: (ctx) => canShareTrips(ctx.scopes),
   })
   async createShareLink(
-    { tripId, share_map, share_bookings, share_packing, share_budget, share_collab }: {
-      tripId: number; share_map?: boolean; share_bookings?: boolean; share_packing?: boolean; share_budget?: boolean; share_collab?: boolean;
+    { tripId, share_map, share_bookings, share_packing, share_budget, share_collab, share_edit }: {
+      tripId: number; share_map?: boolean; share_bookings?: boolean; share_packing?: boolean; share_budget?: boolean; share_collab?: boolean; share_edit?: boolean;
     },
     ctx: McpContext,
   ) {
@@ -72,7 +73,7 @@ export class ShareMcp {
     // The zod .default()s above fill omitted flags, and ShareService applies
     // the same defaults again for undefined — no re-defaulting needed here.
     const { token, created } = this.share.createOrUpdate(String(tripId), ctx.userId, {
-      share_map, share_bookings, share_packing, share_budget, share_collab,
+      share_map, share_bookings, share_packing, share_budget, share_collab, share_edit,
     });
     return ok({ token, created });
   }

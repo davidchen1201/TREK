@@ -1228,6 +1228,10 @@ export const shareApi = {
   createLink: (tripId: number | string, perms?: Record<string, boolean>) => apiClient.post(`/trips/${tripId}/share-link`, perms || {}).then(r => r.data),
   deleteLink: (tripId: number | string) => apiClient.delete(`/trips/${tripId}/share-link`).then(r => r.data),
   getSharedTrip: (token: string) => apiClient.get(`/shared/${token}`).then(r => r.data),
+  updateSharedDay: (token: string, dayId: number | string, title: string) => apiClient.put(`/shared/${token}/days/${dayId}`, { title }).then(r => r.data),
+  createSharedDayNote: (token: string, dayId: number | string, note: { text: string; time?: string | null; icon?: string | null; sort_order?: number; color?: string | null }) => apiClient.post(`/shared/${token}/days/${dayId}/notes`, note).then(r => r.data),
+  updateSharedDayNote: (token: string, dayId: number | string, noteId: number | string, note: { text?: string; time?: string | null; icon?: string | null; sort_order?: number; color?: string | null }) => apiClient.put(`/shared/${token}/days/${dayId}/notes/${noteId}`, note).then(r => r.data),
+  deleteSharedDayNote: (token: string, dayId: number | string, noteId: number | string) => apiClient.delete(`/shared/${token}/days/${dayId}/notes/${noteId}`).then(r => r.data),
 }
 
 // Public transit routing (#1065) — Transitous/MOTIS proxied through the server.

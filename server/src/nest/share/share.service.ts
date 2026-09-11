@@ -34,6 +34,7 @@ export interface SharePermissions {
   share_packing?: boolean;
   share_budget?: boolean;
   share_collab?: boolean;
+  share_edit?: boolean;
 }
 
 export interface ShareTokenInfo {
@@ -44,6 +45,7 @@ export interface ShareTokenInfo {
   share_packing: boolean;
   share_budget: boolean;
   share_collab: boolean;
+  share_edit: boolean;
 }
 
 /**
@@ -85,6 +87,7 @@ export class ShareService {
       share_packing = false,
       share_budget = false,
       share_collab = false,
+      share_edit = false,
     } = permissions;
 
     const expiresAt = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString();
@@ -92,16 +95,16 @@ export class ShareService {
       const existing = this.dbs.get<{ token: string }>('SELECT token FROM share_tokens WHERE trip_id = ?', tripId);
       if (existing) {
         this.dbs.run(
-          'UPDATE share_tokens SET share_map = ?, share_bookings = ?, share_packing = ?, share_budget = ?, share_collab = ?, expires_at = ? WHERE trip_id = ?',
-          share_map ? 1 : 0, share_bookings ? 1 : 0, share_packing ? 1 : 0, share_budget ? 1 : 0, share_collab ? 1 : 0, expiresAt, tripId,
+          'UPDATE share_tokens SET share_map = ?, share_bookings = ?, share_packing = ?, share_budget = ?, share_collab = ?, share_edit = ?, expires_at = ? WHERE trip_id = ?',
+          share_map ? 1 : 0, share_bookings ? 1 : 0, share_packing ? 1 : 0, share_budget ? 1 : 0, share_collab ? 1 : 0, share_edit ? 1 : 0, expiresAt, tripId,
         );
         return { token: existing.token, created: false };
       }
 
       const token = crypto.randomBytes(24).toString('base64url');
       this.dbs.run(
-        'INSERT INTO share_tokens (trip_id, token, created_by, share_map, share_bookings, share_packing, share_budget, share_collab, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        tripId, token, userId, share_map ? 1 : 0, share_bookings ? 1 : 0, share_packing ? 1 : 0, share_budget ? 1 : 0, share_collab ? 1 : 0, expiresAt,
+        'INSERT INTO share_tokens (trip_id, token, created_by, share_map, share_bookings, share_packing, share_budget, share_collab, share_edit, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        tripId, token, userId, share_map ? 1 : 0, share_bookings ? 1 : 0, share_packing ? 1 : 0, share_budget ? 1 : 0, share_collab ? 1 : 0, share_edit ? 1 : 0, expiresAt,
       );
       return { token, created: true };
     });
@@ -121,6 +124,7 @@ export class ShareService {
       share_packing: !!row.share_packing,
       share_budget: !!row.share_budget,
       share_collab: !!row.share_collab,
+      share_edit: !!row.share_edit,
     };
   }
 
@@ -129,6 +133,19 @@ export class ShareService {
    */
   remove(tripId: string): void {
     this.dbs.run('DELETE FROM share_tokens WHERE trip_id = ?', tripId);
+  }
+
+  /**
+   * Resolve the trip an anonymous token may edit. Editing is intentionally a
+   * narrower capability than reading: both the itinerary and explicit edit
+   * switches must be on, and the ordinary share-link expiry still applies.
+   */
+  getEditableTripId(token: string): number | null {
+    const row = this.dbs.get<{ trip_id: number }>(
+      "SELECT trip_id FROM share_tokens WHERE token = ? AND share_map = 1 AND share_edit = 1 AND (expires_at IS NULL OR julianday(expires_at) > julianday('now'))",
+      token,
+    );
+    return row?.trip_id ?? null;
   }
 
   /**
@@ -142,7 +159,7 @@ export class ShareService {
    */
   getSharedTripData(token: string): Record<string, any> | null {
     const shareRow = this.dbs.get<any>(
-      "SELECT * FROM share_tokens WHERE token = ? AND (expires_at IS NULL OR expires_at > datetime('now'))",
+      "SELECT * FROM share_tokens WHERE token = ? AND (expires_at IS NULL OR julianday(expires_at) > julianday('now'))",
       token,
     );
     if (!shareRow) return null;
@@ -162,6 +179,7 @@ export class ShareService {
       share_packing: !!shareRow.share_packing,
       share_budget: !!shareRow.share_budget,
       share_collab: !!shareRow.share_collab,
+      share_edit: !!shareRow.share_edit,
     };
 
     // Itinerary — days with assignments/notes, and the place pool
@@ -325,7 +343,7 @@ export class ShareService {
    */
   async getSharedPlacePhotoKey(token: string, placeId: string): Promise<string | null> {
     const shareRow = this.dbs.get<{ trip_id: string; share_map: number }>(
-      "SELECT trip_id, share_map FROM share_tokens WHERE token = ? AND (expires_at IS NULL OR expires_at > datetime('now'))",
+      "SELECT trip_id, share_map FROM share_tokens WHERE token = ? AND (expires_at IS NULL OR julianday(expires_at) > julianday('now'))",
       token,
     );
     if (!shareRow) return null;
