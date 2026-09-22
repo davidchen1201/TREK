@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="referrer" content="no-referrer" />
-    <title>吴哥古迹导读｜TREK</title>
+    <title>吴哥三日古迹导读｜TREK</title>
     <style>
       :root {
         --pine: #173d35;
@@ -469,7 +469,7 @@
     </style>
     <meta
       name="description"
-      content="按行程阅读暹粒15处古迹的历史背景、游览价值与艺术细节，结合蒋勋《吴哥之美》的短引、原创观景文字及伴听线索。"
+      content="按三日主路线阅读吴哥八处古迹的历史、现场看点、导游提问与寺庙对照知识，附延伸阅读。"
     />
     <style>
       .toc {
@@ -584,6 +584,21 @@
           scroll-behavior: auto;
         }
       }
+          .route-overview { border: 1px solid var(--line); background: #fbfaf6; padding: 22px 24px; margin: 0 0 46px; }
+      .route-overview h2 { color: var(--pine); margin: 0 0 10px; font-size: 27px; }
+      .route-overview .eyebrow { margin-bottom: 5px; }
+      .route-overview ol { margin: 10px 0 12px; padding-left: 24px; }
+      .route-overview p { margin: 0; color: #425049; font-size: 14px; }
+      .route-overview .timeline { margin-top: 13px; padding-top: 13px; border-top: 1px solid var(--line); }
+      .compare-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; }
+      .compare-grid div { border-top: 2px solid #c9d1c9; padding-top: 9px; color: #425049; font-size: 13px; line-height: 1.65; }
+      .compare-grid b { color: var(--green); }
+      .guide-question { grid-column: 1 / -1; padding: 13px 16px; margin: 2px 0 0 !important; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); color: #425049; }
+      .extended-reading { border-top: 2px solid var(--pine); border-bottom: 1px solid var(--line); margin: 12px 0 54px; }
+      .extended-reading summary { color: var(--pine); cursor: pointer; font: 700 22px/1.4 var(--serif); padding: 18px 0; }
+      .extended-content { padding-bottom: 8px; }
+      .extended-content > p { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+      @media (max-width: 800px) { .route-overview { padding: 18px; margin-bottom: 34px; } .compare-grid { grid-template-columns: 1fr; gap: 10px; } .guide-question { margin-top: 16px !important; } .extended-reading summary { font-size: 20px; } }
     </style>
   </head>
   <body>
@@ -598,9 +613,9 @@
       <div class="intro-wrap">
         <section class="intro">
           <p class="eyebrow">SIEM REAP · READING GUIDE</p>
-          <h1>吴哥古迹导读</h1>
+          <h1>吴哥三日古迹导读</h1>
           <p class="lede">
-            把王城、寺院与水面放回同一张地图，慢慢读出石头里的时间。
+            沿三日八处主路线，把王城、寺院与水面放回同一张地图，慢慢读出石头里的时间。
           </p>
           <p class="method">
             以下文字为原创游览说明；年代为考古与碑铭研究中的常用断代。古迹常经历改建、改宗与近现代修复，现场以
@@ -630,43 +645,18 @@
       </div>
       <div class="shell">
         <aside class="toc" aria-label="目录">
-          <strong>目录 · 15处古迹</strong><a href="#book">与《吴哥之美》同行</a
-          ><strong class="toc-group">第一日｜吴哥城</strong
-          ><a href="#south-gate">吴哥城南门</a><a href="#bayon">巴戎寺</a
-          ><a href="#baphuon">巴方寺</a><a href="#elephant-terrace">战象平台</a
-          ><a href="#leper-king">癞王平台</a
-          ><strong class="toc-group">第二日｜寺院与水面</strong
-          ><a href="#angkor-wat">吴哥寺</a><a href="#ta-prohm">塔布笼寺</a
-          ><a href="#banteay-kdei">班黛克蒂</a><a href="#srah-srang">皇家浴池</a
-          ><strong class="toc-group">第三日｜Koh Ker 与崩密列</strong
-          ><a href="#koh-ker">Koh Ker 高棉金字塔</a
-          ><a href="#beng-mealea">崩密列</a
-          ><strong class="toc-group">第三日备选</strong
-          ><a href="#banteay-srei">女王宫</a
-          ><a href="#banteay-samre">班黛色玛</a><a href="#preah-khan">圣剑寺</a
-          ><a href="#neak-pean">涅槃寺</a>
+          <strong>目录 · 主路线8处</strong><a href="#book">与《吴哥之美》同行</a><strong class="toc-group">第一日</strong><a href="#preah-khan">圣剑寺</a><strong class="toc-group">第二日上午</strong><a href="#angkor-wat">吴哥窟</a><a href="#ta-prohm">塔布隆寺</a><strong class="toc-group">第二日下午</strong><a href="#bayon">巴戎寺</a><a href="#angkor-thom">通王城</a><strong class="toc-group">第三日</strong><a href="#banteay-srei">女王宫</a><a href="#beng-mealea">崩密列</a><a href="#koh-ker">贡开（亦译高盖／科·凯）</a><a href="#extended-reading">延伸阅读（不在主行程）</a>
         </aside>
         <article>
           <details class="mobile-toc">
-            <summary>目录 · 15处古迹</summary>
+            <summary>目录 · 主路线8处</summary>
             <nav>
-              <a href="#book">与《吴哥之美》同行</a
-              ><strong class="toc-group">第一日｜吴哥城</strong
-              ><a href="#south-gate">吴哥城南门</a><a href="#bayon">巴戎寺</a
-              ><a href="#baphuon">巴方寺</a
-              ><a href="#elephant-terrace">战象平台</a
-              ><a href="#leper-king">癞王平台</a
-              ><strong class="toc-group">第二日｜寺院与水面</strong
-              ><a href="#angkor-wat">吴哥寺</a><a href="#ta-prohm">塔布笼寺</a
-              ><a href="#banteay-kdei">班黛克蒂</a
-              ><a href="#srah-srang">皇家浴池</a
-              ><strong class="toc-group">第三日｜Koh Ker 与崩密列</strong
-              ><a href="#koh-ker">Koh Ker 高棉金字塔</a
-              ><a href="#beng-mealea">崩密列</a
-              ><strong class="toc-group">第三日备选</strong
-              ><a href="#banteay-srei">女王宫</a
-              ><a href="#banteay-samre">班黛色玛</a
-              ><a href="#preah-khan">圣剑寺</a><a href="#neak-pean">涅槃寺</a>
+              <a href="#book">与《吴哥之美》同行</a>
+              <strong class="toc-group">第一日</strong><a href="#preah-khan">圣剑寺</a>
+              <strong class="toc-group">第二日上午</strong><a href="#angkor-wat">吴哥窟</a><a href="#ta-prohm">塔布隆寺</a>
+              <strong class="toc-group">第二日下午</strong><a href="#bayon">巴戎寺</a><a href="#angkor-thom">通王城</a>
+              <strong class="toc-group">第三日</strong><a href="#banteay-srei">女王宫</a><a href="#beng-mealea">崩密列</a><a href="#koh-ker">贡开（亦译高盖／科·凯）</a>
+              <a href="#extended-reading">延伸阅读（不在主行程）</a>
             </nav>
           </details>
           <aside class="book" id="book">
@@ -690,51 +680,207 @@
               <strong>在巴戎寺看表情：</strong
               >留意侧光怎样改变石面的神情。<br /><strong>在吴哥寺看光：</strong
               >从水中倒影走向回廊，让宏大的塔影落回一段细小的浮雕。<br /><strong
-                >在塔布笼寺看时间：</strong
+                >在塔布隆寺看时间：</strong
               >把门框的直线与树根的曲线放在一起，读自然与建筑的相遇。
             </p>
             <small
               >除上方篇名短引，本文游赏文字均为原创，不作为蒋勋原文。条目中的“伴听”另据授权音频目录标注节目，供游览前后聆听；史实另附遗产机构资料。</small
             >
           </aside>
-          <section class="section">
-            <div class="section-header">
-              <span>DAY 01</span>
-              <h2>第一日｜王城与中心</h2>
+          <section class="route-overview" aria-labelledby="route-title">
+            <p class="eyebrow">THE MAIN ROUTE · 8 SITES</p>
+            <h2 id="route-title">三日主路线</h2>
+            <ol>
+              <li><strong>第一日</strong>｜圣剑寺</li>
+              <li><strong>第二日上午</strong>｜吴哥窟、塔布隆寺</li>
+              <li><strong>第二日下午</strong>｜巴戎寺、通王城</li>
+              <li><strong>第三日</strong>｜女王宫、崩密列、贡开；具体先后按酒店位置与当日安排决定</li>
+            </ol>
+            <p>八处主路线以王朝年代、宗教转换、城市尺度与遗址保护为线索。城内不硬排额外停留点，沿现场开放动线行走即可。</p>
+            <p class="timeline"><b>时间脉络</b>｜10世纪的女王宫与贡开，展现吴哥成熟期前的精雕与短暂王都实验；12世纪的吴哥窟、崩密列，以及阇耶跋摩七世时期的圣剑寺、塔布隆寺、巴戎寺与通王城，则把国寺、城市和水利网络推向新的规模。贡开于2023年列入《世界遗产名录》。<a href="https://whc.unesco.org/en/list/1668/" target="_blank" rel="noopener noreferrer">UNESCO</a></p>
+            <div class="compare-grid" aria-label="寺庙对照知识">
+              <div><b>吴哥窟 × 巴戎寺</b><br />前者以轴线、护城河和五塔组织宇宙秩序；后者以密集面塔与叙事回廊把王都生活带入中心。</div>
+              <div><b>圣剑寺 × 塔布隆寺</b><br />同属阇耶跋摩七世时期的王室寺院：一处纪念父亲与胜利，一处纪念母亲，并都能读到庞大寺院网络。</div>
+              <div><b>女王宫 × 贡开</b><br />一处以10世纪粉红砂岩的精雕见长；一处展现短暂王都的宏大阶台与分散遗址，尺度和艺术语言截然不同。</div>
             </div>
-            <section class="site" id="south-gate">
-              <h3>吴哥城南门</h3>
-              <p class="english">South Gate of Angkor Thom</p>
+          </section>
+          <section class="section">
+            <div class="section-header"><span>DAY 01</span><h2>第一日｜圣剑寺：胜利、追思与寺院网络</h2></div>
+            <p class="section-note">从多重门楼与院落开始，读阇耶跋摩七世如何把纪念、信仰、教育与水利环境连在一起。</p>
+            <section class="site" id="preah-khan">
+              <h3>圣剑寺</h3>
+              <p class="english">Preah Khan</p>
               <p class="alias">
-                <strong>12世纪末—13世纪初，巴戎风格</strong
-                ><br />阇耶跋摩七世<br />大乘佛教王都；门道同时借印度宇宙论象征守护王城
+                <strong>1191年，巴戎风格</strong
+                ><br />阇耶跋摩七世<br />大乘佛教与王室祖先崇拜；兼容多种神祇
               </p>
               <div class="site-grid">
                 <div>
                   <p>
                     <b>历史背景</b
-                    ><br />南门是吴哥城五座城门中最常作为入城轴线的一座。阇耶跋摩七世在12世纪末击退占城后重建王都，城墙与护城河围合出巨大的都城。通向门楼的堤道两侧，诸神与阿修罗各拉巨蛇，这组形象通常被解读为“搅乳海”神话，使进城之路带上宇宙秩序的象征。
+                    ><br />圣剑寺据碑铭于1191年建成，位在击败占城军的决战地点，并献给阇耶跋摩七世的父亲；其名意为“神圣胜利之剑”。巨大围合内有寺院、神龛与多重门楼。碑铭与遗迹均显示它不只是礼拜场所，亦可能承担僧侣和王室学者教育功能。
                   </p>
                 </div>
                 <div>
                   <p>
                     <b>游览价值</b
-                    ><br />它把吴哥的尺度、城市工程和宗教想象一次说清：先看护城河与城墙的防御，再读石像队列的神话。入城前沿安全步行区慢走几分钟，建立之后看巴戎寺时所需的方位感。
+                    ><br />它适合用“穿行”而非“打卡”来游览。穿过加鲁达、那伽与门楼，观察不同院落如何改变光线和声音；再把它与附近的北池、涅槃寺连起来看，能感到阇耶跋摩七世将胜利、纪念、学习与水利布置成网络。
                   </p>
                 </div>
                 <div class="highlights">
                   <b>值得细看的地方</b>
                   <ul>
-                    <li>五十四尊神与五十四尊阿修罗的长队</li>
-                    <li>塔门四面石头像（身份仍有讨论）</li>
-                    <li>护城河、堤道与城墙构成的城市边界</li>
+                    <li>从东门进入长长的引道，观察护栏、门楼与层层院落如何把世俗空间逐步导向中央圣殿，感受轴线的仪式性。</li>
+                    <li>留意中央区域的佛教象征、后期印度教雕刻及局部改造，比较同一建筑中不同时期的痕迹。</li>
+                    <li>细看图书馆、回廊和墙面浮雕；树根、倾斜石块与修复支撑也能说明遗址保护的现场挑战与取舍。</li>
                   </ul>
                 </div>
                 <p class="observe">
                   <b>驻足细看 · 原创</b
-                  ><br />在桥上回望来路，让护城河、石像与城门共同显出王都的尺度。
+                  ><br />穿过加鲁达与门楼，让胜利纪念、父亲追思和寺院生活在同一座空间相遇。
                 </p>
               </div>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />碑铭所说的城市、教育功能，与今天看到的宗教空间之间有什么对应关系？
+                </p>
+              <p class="source-ref">
+                史实来源：<a
+                  href="https://apsaraauthority.gov.kh/2026/05/07/great-architecture-and-a-symbol-of-victory/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >APSARA · 古迹资料</a
+                >
+                ·
+                <a
+                  href="https://whc.unesco.org/en/list/668"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >UNESCO · 吴哥</a
+                >
+              </p>
+            </section>
+          </section>
+          <section class="section">
+            <div class="section-header"><span>DAY 02 · AM</span><h2>第二日上午｜吴哥窟与塔布隆寺</h2></div>
+            <p class="section-note">先看苏耶跋摩二世时代的宏大宇宙秩序，再转入阇耶跋摩七世的王室寺院与保护现场。</p>
+            <section class="site" id="angkor-wat">
+              <h3>吴哥窟</h3>
+              <p class="english">Angkor Wat</p>
+              <p class="alias">
+                <strong>12世纪前半叶，吴哥寺风格</strong
+                ><br />苏耶跋摩二世（Suryavarman II）<br />毗湿奴印度教寺庙；后长期有佛教礼拜
+              </p>
+              <div class="site-grid">
+                <div>
+                  <p>
+                    <b>历史背景</b
+                    ><br />吴哥寺由苏耶跋摩二世主持兴建，是王国最宏大的寺庙建筑之一，原献给毗湿奴。环壕、围墙、层层回廊和五塔把须弥山宇宙观落实为可行走的空间；西向布局也使其格外醒目。长廊浮雕讲述《摩诃婆罗多》《罗摩衍那》与搅乳海，也刻下王室队伍。
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <b>游览价值</b
+                    ><br />建议将它分成两个尺度：先从护城河外看整体比例，再进回廊读一小段故事。早晨的人潮集中在日出，若只求光线可选择不同时间；真正值得留给自己的，是在浮雕前辨认叙事如何沿着行走展开。
+                  </p>
+                </div>
+                <div class="highlights">
+                  <b>值得细看的地方</b>
+                  <ul>
+                    <li>西侧长堤与护城水系展示寺院的整体尺度；从外向内看塔群，可理解层层升高的宇宙象征和礼仪动线。</li>
+                    <li>南侧回廊的乳海搅拌浮雕人物密集，注意天神、阿修罗、蛇身与叙事节奏的排列及细节。，值得放慢脚步观察。</li>
+                    <li>中央上层平台可观察塔形、门廊和视线控制；参观时留意仍在进行的佛教礼拜与保护规则。</li>
+                  </ul>
+                </div>
+                <p class="observe">
+                  <b>驻足细看 · 原创</b
+                  ><br />水中塔影被风轻轻打散，回廊里的故事仍在石上延续；日出只是翻开这座寺庙的第一页。
+                </p>
+              </div>
+              <p class="book-link">
+                伴听：<a
+                  href="https://read.douban.com/ebook/670270619/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >第8—14讲｜吴哥寺的历史、空间与浮雕</a
+                >
+              </p>
+              <figure class="site-photo">
+                <img width="1280" height="870" src="/angkor-photos/Angkor_Wat.webp" alt="莲花池前的吴哥寺塔群" loading="lazy" />
+                <figcaption>吴哥寺，照片：<a href="https://commons.wikimedia.org/wiki/File:Angkor_Wat.jpg" target="_blank" rel="noopener noreferrer">Bjørn Christian Tørrissen</a>，<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 4.0</a>。</figcaption>
+                <p class="photo-note"><b>现场辨认</b>：从寺前莲花池看，五塔并非平排同高；中央主塔与四角塔的高差，让寺庙的层层抬升在远处就已可读。</p>
+              </figure>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />吴哥窟从毗湿奴神庙转为佛教场所的过程，在建筑和雕刻上留下了哪些证据？
+                </p>
+              <p class="source-ref">
+                史实来源：<a
+                  href="https://whc.unesco.org/en/list/668"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >UNESCO · 吴哥</a
+                >
+                ·
+                <a
+                  href="https://whc.unesco.org/archive/advisory_body_evaluation/668.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >ICOMOS · 吴哥评估报告</a
+                >
+              </p>
+            </section>
+            <section class="site" id="ta-prohm">
+              <h3>塔布隆寺</h3>
+              <p class="english">Ta Prohm</p>
+              <p class="alias">
+                <strong>1186年起，巴戎风格</strong
+                ><br />阇耶跋摩七世<br />大乘佛教；供奉与王母相关的般若波罗蜜多形象
+              </p>
+              <div class="site-grid">
+                <div>
+                  <p>
+                    <b>历史背景</b
+                    ><br />塔布隆寺由阇耶跋摩七世为纪念母亲而建，碑铭记录其名为
+                    Rajavihara。它原是庞大的寺院体系的一部分，后来在树根、坍石与修复之间形成今日面貌。此地并不是“天然废墟”：保留部分树与建筑交缠的景观，是在结构安全和历史呈现间持续权衡的结果。
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <b>游览价值</b
+                    ><br />树根最吸睛，却也最容易让人忽略回廊、门楼与女神像。先看寺院的连续门框，再看根系如何压住石块；你会发现“丛林吞没古城”的印象背后，是材料、排水和保护选择共同塑成的现场。
+                  </p>
+                </div>
+                <div class="highlights">
+                  <b>值得细看的地方</b>
+                  <ul>
+                    <li>穿过门楼和长廊，观察连续的院墙如何压缩视线，再在中央区域展开为多层建筑群，体会空间转折。</li>
+                    <li>树根与石墙交织的景象很醒目；请同时寻找支撑、编号石块和排水设施，理解保护并非单纯“放任自然”。</li>
+                    <li>细看女神、佛教主题和小型浮雕，比较残损表面与仍清晰的装饰，辨认后期改造线索与工艺。</li>
+                  </ul>
+                </div>
+                <p class="observe">
+                  <b>驻足细看 · 原创</b
+                  ><br />门框守着昔日的直线，树根长出今日的弧度；在两种形状相遇的地方，时间忽然可以被看见。
+                </p>
+              </div>
+              <p class="book-link">
+                伴听：<a
+                  href="https://read.douban.com/ebook/670270619/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >第27讲｜塔普伦寺（塔布隆寺）</a
+                >
+              </p>
+              <figure class="site-photo">
+                <img width="966" height="1280" src="/angkor-photos/17_-_Ta_Prohm.webp" alt="树根覆盖塔布隆寺门楼石墙" loading="lazy" />
+                <figcaption>塔布隆寺，照片：<a href="https://commons.wikimedia.org/wiki/File:17_-_Ta_Prohm.jpg" target="_blank" rel="noopener noreferrer">P. Hughes</a>，<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 4.0</a>。</figcaption>
+                <p class="photo-note"><b>现场辨认</b>：先看门框原本的垂直线，再看根系如何跨过石块；修复现场保留的正是这种建筑与植物彼此牵制的关系。</p>
+              </figure>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />保护团队如何决定哪些树木保留、修剪或移除，以兼顾遗址安全与塔布隆寺的历史环境？
+                </p>
               <p class="source-ref">
                 史实来源：<a
                   href="https://whc.unesco.org/en/list/668"
@@ -751,6 +897,10 @@
                 >
               </p>
             </section>
+          </section>
+          <section class="section">
+            <div class="section-header"><span>DAY 02 · PM</span><h2>第二日下午｜巴戎寺与通王城</h2></div>
+            <p class="section-note">从巴戎寺的面塔与浮雕进入王都尺度；通王城城内具体停留不作硬性安排。</p>
             <section class="site" id="bayon">
               <h3>巴戎寺</h3>
               <p class="english">Bayon</p>
@@ -774,9 +924,9 @@
                 <div class="highlights">
                   <b>值得细看的地方</b>
                   <ul>
-                    <li>面塔上的安宁面容</li>
-                    <li>高棉与占城战争浮雕</li>
-                    <li>市井、渔猎与仪式的生活场景</li>
+                    <li>从外层浮雕看日常生活、战争和仪式，再进入内层回廊，体会叙事从世俗历史转向神圣空间。</li>
+                    <li>仰视面容塔时比较不同朝向、尺度和残存数量；面容身份存在多种解释，适合把争议当作观察重点。</li>
+                    <li>留意中央塔、狭窄通道与采光变化，观察长期修复如何处理砂岩承重、错位和水分问题。，值得放慢脚步观察。</li>
                   </ul>
                 </div>
                 <p class="observe">
@@ -797,6 +947,10 @@
                 <figcaption>巴戎寺，照片：<a href="https://commons.wikimedia.org/wiki/File:Bayon_Temple.jpg" target="_blank" rel="noopener noreferrer">B1Bayon</a>，<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 4.0</a>。</figcaption>
                 <p class="photo-note"><b>现场辨认</b>：门洞把石塔切成前后重叠的层次；沿回廊移动几步，就能体会巴戎寺不按单一轴线展开的空间感。</p>
               </figure>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />面容塔有哪些身份假说？不同解释会怎样改变我们对巴戎寺宗教意义的理解？
+                </p>
               <p class="source-ref">
                 史实来源：<a
                   href="https://whc.unesco.org/en/list/668"
@@ -813,7 +967,248 @@
                 >
               </p>
             </section>
-            <section class="site" id="baphuon">
+            <section class="site" id="angkor-thom">
+              <h3>通王城（吴哥通）</h3>
+              <p class="english">Angkor Thom · South Gate</p>
+              <p class="alias">
+                <strong>12世纪末—13世纪初，巴戎风格</strong
+                ><br />阇耶跋摩七世<br />大乘佛教王都；门道同时借印度宇宙论象征守护王城
+              </p>
+              <div class="site-grid">
+                <div>
+                  <p>
+                    <b>历史背景</b
+                    ><br />通王城是阇耶跋摩七世时期的王都系统；南门是五座城门中最常作为入城轴线的一座。阇耶跋摩七世在12世纪末击退占城后重建王都，城墙与护城河围合出巨大的都城。通向门楼的堤道两侧，诸神与阿修罗各拉巨蛇，这组形象通常被解读为“搅乳海”神话，使进城之路带上宇宙秩序的象征。
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <b>游览价值</b
+                    ><br />它把吴哥的尺度、城市工程和宗教想象一次说清：先看护城河、城墙与道路如何围合一座都城，再读石像队列的神话。城内具体停留可依当日体力和现场开放安排调整。
+                  </p>
+                </div>
+                <div class="highlights">
+                  <b>值得细看的地方</b>
+                  <ul>
+                    <li>南门桥上的天神、阿修罗与蛇身护栏形成迎宾轴线；比较两侧人物姿态、表情和修复程度。</li>
+                    <li>站在城墙或护城河边观察道路、水面与森林关系，想象一座依赖水利和交通组织的都城。，值得放慢脚步观察。</li>
+                    <li>把巴戎寺、象台、癞王台等遗迹放入城市格局中，不要只把吴哥通理解为一座城门和单一景点。</li>
+                  </ul>
+                </div>
+                <p class="observe">
+                  <b>驻足细看 · 原创</b
+                  ><br />在桥上回望来路，让护城河、石像与城门共同显出王都的尺度。
+                </p>
+              </div>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />城墙、护城河和中央巴戎寺如何共同表达王权与宇宙秩序？
+                </p>
+              <p class="source-ref">
+                史实来源：<a
+                  href="https://whc.unesco.org/en/list/668"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >UNESCO · 吴哥</a
+                >
+                ·
+                <a
+                  href="https://www.wmf.org/sites/default/files/article/pdfs/Preservation_Priorities_The_Angkor_Challenge.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >WMF · 吴哥保护报告</a
+                >
+              </p>
+            </section>
+          </section>
+          <section class="section">
+            <div class="section-header"><span>DAY 03</span><h2>第三日｜女王宫、崩密列与贡开</h2></div>
+            <p class="section-note">三处先后由酒店位置与当日交通决定：从10世纪的精雕，到12世纪的坍塌回廊，再到短暂王都的阶梯金字塔。</p>
+            <section class="site" id="banteay-srei">
+              <h3>女王宫</h3>
+              <p class="english">Banteay Srei</p>
+              <p class="alias">
+                <strong>967年奠基，10世纪末发展；班黛色雷风格</strong
+                ><br />拉真陀罗跋摩二世朝臣 Yajnavaraha；后为阇耶跋摩五世导师<br />湿婆信仰
+              </p>
+              <div class="site-grid">
+                <div>
+                  <p>
+                    <b>历史背景</b
+                    ><br />女王宫的现代名称并不意味着由女性建造；其碑铭显示，967年由拉真陀罗跋摩二世朝臣、后来成为阇耶跋摩五世导师的婆罗门学者
+                    Yajnavaraha
+                    创建，奉祀湿婆。寺体不大，却以粉红砂岩和极其细密的楣饰闻名。它说明高棉宗教建筑不只由国王直接主持，精英官员也能留下高度成熟的艺术作品。
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <b>游览价值</b
+                    ><br />这是读细节胜过看规模的一站。与其匆忙环拍，不如在一两面山花前停留，比较人物、植物卷草与框架的层次。粉红砂岩会随光线变化；请遵守围栏距离，让精细雕刻获得应有的保护。
+                  </p>
+                </div>
+                <div class="highlights">
+                  <b>值得细看的地方</b>
+                  <ul>
+                    <li>观察粉红色砂岩门楣和山墙的浅浮雕，注意卷草、神兽与人物如何填满狭小构图并形成层次。</li>
+                    <li>比较东门、内院和中央塔的尺度：精致并不等于宏大，寺院通过比例制造亲密而浓缩的视觉效果。</li>
+                    <li>寻找罗摩衍那等神话场景，并询问哪些图像属于湿婆传统、哪些体现地方工匠的处理与叙事选择。</li>
+                  </ul>
+                </div>
+                <p class="observe">
+                  <b>驻足细看 · 原创</b
+                  ><br />把镜头放下十秒，让极小的人物、卷草与边框显出砂岩里的深度。
+                </p>
+              </div>
+              <p class="book-link">
+                伴听：<a
+                  href="https://read.douban.com/ebook/670270619/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >第6讲｜班蒂斯蕾（女王宫）</a
+                >
+              </p>
+              <figure class="site-photo">
+                <img width="500" height="288" src="/angkor-photos/Banteay_Srei.webp" alt="女王宫粉红砂岩塔门与山花" loading="lazy" />
+                <figcaption>女王宫，照片：<a href="https://commons.wikimedia.org/wiki/File:Banteay_Srei.jpg" target="_blank" rel="noopener noreferrer">Michel Estermann</a>，<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 3.0</a>。</figcaption>
+                <p class="photo-note"><b>现场辨认</b>：粉红砂岩的色泽先让门楼显得柔和，靠近后才会看见山花、柱身与边框被分成极细的雕刻层次。</p>
+              </figure>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />既然不是女王建造，为何“女王宫”这个名称流行至今？碑铭与现代旅游称呼如何区分？
+                </p>
+              <p class="source-ref">
+                史实来源：<a
+                  href="https://whc.unesco.org/archive/advisory_body_evaluation/668.pdf"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >ICOMOS · 吴哥评估报告</a
+                >
+                ·
+                <a
+                  href="https://whc.unesco.org/en/list/668"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >UNESCO · 吴哥</a
+                >
+              </p>
+            </section>
+            <section class="site" id="beng-mealea">
+              <h3>崩密列</h3>
+              <p class="english">Beng Mealea</p>
+              <p class="alias">
+                <strong>12世纪中叶，吴哥寺风格</strong
+                ><br />通常归苏耶跋摩二世时期，确切奉献与建造细节仍有讨论<br />印度教，见毗湿奴神话题材
+              </p>
+              <div class="site-grid">
+                <div>
+                  <p>
+                    <b>历史背景</b
+                    ><br />崩密列是一座规模很大的12世纪寺庙，布局与风格接近吴哥寺。APSARA将其列为苏耶跋摩二世时期的印度教遗址，外有壕沟，石块塌落仍保留复杂的回廊和门楼关系。部分浮雕呈现《罗摩衍那》与搅乳海，说明它与吴哥寺共享的并不只是外形。
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <b>游览价值</b
+                    ><br />它特别适合看“建筑变成遗址”的过程：坍落石材让门、廊、塔不再清晰分层。沿既定步道观察一处浮雕、一段回廊和一片壕沟，比急于寻找电影感机位更能读出原有秩序。
+                  </p>
+                </div>
+                <div class="highlights">
+                  <b>值得细看的地方</b>
+                  <ul>
+                    <li>沿木栈道穿过倒塌回廊，观察门框、檐部和散落构件如何提示原有建筑的层次与承重关系。</li>
+                    <li>寻找砂岩拼接、假门和装饰残片；残垣断面能帮助理解寺院曾经的结构，而非只看“废墟感”。</li>
+                    <li>比较崩密列与吴哥窟的布局和雕刻风格，同时注意这里的植被与安全设施属于持续保护的一部分。</li>
+                  </ul>
+                </div>
+                <p class="observe">
+                  <b>驻足细看 · 原创</b
+                  ><br />沿既定步道前行，让坍石之间仍可辨认的门、廊与壕沟慢慢重组空间。
+                </p>
+              </div>
+              <figure class="site-photo">
+                <img width="1024" height="685" src="/angkor-photos/Beng_Mealea.webp" alt="林木与坍石之间的崩密列回廊" loading="lazy" />
+                <figcaption>崩密列，照片：<a href="https://commons.wikimedia.org/wiki/File:Beng_Mealea.jpg" target="_blank" rel="noopener noreferrer">Drew Hess</a>，<a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 2.0</a>。</figcaption>
+                <p class="photo-note"><b>现场辨认</b>：照片里的墙、门与树干不在同一年代，却共同框出原有回廊；沿步道看这些残余的直线，较容易把坍塌后的石块重新读成空间。</p>
+              </figure>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />考古学家依据哪些证据判断崩密列的年代、功能及其与吴哥窟之间的建筑联系？
+                </p>
+              <p class="source-ref">
+                史实来源：<a
+                  href="https://apsaraauthority.gov.kh/2021/08/05/beng-mealea/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >APSARA · 古迹资料</a
+                >
+                ·
+                <a
+                  href="https://whc.unesco.org/en/tentativelists/6462"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >UNESCO · 崩密列资料</a
+                >
+              </p>
+            </section>
+            <section class="site" id="koh-ker">
+              <h3>贡开（亦译高盖／科·凯）</h3>
+              <p class="english">Koh Ker · Prasat Thom</p>
+              <p class="alias">
+                <strong>约928—944年，Koh Ker风格</strong
+                ><br />阇耶跋摩四世（Jayavarman IV）<br />湿婆信仰；中心神祇与林伽崇拜相关
+              </p>
+              <div class="site-grid">
+                <div>
+                  <p>
+                    <b>历史背景</b><br />Koh
+                    Ker曾在10世纪短暂成为高棉王都。UNESCO记载，阇耶跋摩四世于921年建立圣城，928—944年为唯一首都；Prasat
+                    Thom
+                    的七层阶台金字塔与吴哥平原寺院的横向展开很不相同。其短暂都城地位使遗址尤其珍贵：它显示王权、石材运输和造像生产可在新的政治中心迅速集中。
+                  </p>
+                </div>
+                <div>
+                  <p>
+                    <b>游览价值</b
+                    ><br />把它安排为远行日的主角。登高前先在底部看七层比例，登上后再看林地与遗址的关系；这样不会把它误读成孤立“金字塔”。路程较长、天气炎热，应预留体力与饮水，并按现场安全限制行动。
+                  </p>
+                </div>
+                <div class="highlights">
+                  <b>值得细看的地方</b>
+                  <ul>
+                    <li>从Prasat Thom远看阶梯金字塔，观察陡峭层级、轴线和周围森林如何构成仪式性景观与视觉焦点。</li>
+                    <li>留意红色砂岩、砖构与巨型雕像残件的组合，比较科·凯艺术风格与吴哥成熟期作品的差异。</li>
+                    <li>询问遗址水库、道路和分散寺院的位置；把单点参观扩展为对整座都城规划的理解。，值得放慢脚步观察。</li>
+                  </ul>
+                </div>
+                <p class="observe">
+                  <b>驻足细看 · 原创</b
+                  ><br />登高后回看林地与散布的遗迹，让短暂都城的雄心在视野中展开。
+                </p>
+              </div>
+              <figure class="site-photo">
+                <img width="768" height="1024" src="/angkor-photos/Koh_Ker_sculpture_2006.webp" alt="Koh Ker 普拉萨特丹瑞的石象雕像" loading="lazy" />
+                <figcaption>Koh Ker 的普拉萨特丹瑞（Prasat Damrei）石象，照片：<a href="https://commons.wikimedia.org/wiki/File:Koh_Ker_sculpture_2006.jpg" target="_blank" rel="noopener noreferrer">fxru</a>，<a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 2.0</a>。</figcaption>
+                <p class="photo-note"><b>现场辨认</b>：这尊石象位于普拉萨特丹瑞，并非 Prasat Thom 的七层金字塔；它提示 Koh Ker 是一组分散在林地中的遗迹，而不只是一座阶台。</p>
+              </figure>
+
+                <p class="guide-question">
+                  <b>可问导游的问题</b><br />贡开短暂成为都城的历史，如何解释其独特的城市布局、阶梯金字塔与雕像风格？
+                </p>
+              <p class="source-ref">
+                史实来源：<a
+                  href="https://whc.unesco.org/en/list/1667/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  >UNESCO · Koh Ker</a
+                >
+              </p>
+            </section>
+          </section>
+          <details class="extended-reading" id="extended-reading">
+            <summary>延伸阅读｜以下古迹不在本次主行程</summary>
+            <div class="extended-content">
+              <p>保留这些条目，供需要加深吴哥城市、寺山和水利知识时阅读；它们不是上述三日路线的备选或加项。</p>
+              <section class="site" id="baphuon">
               <h3>巴方寺</h3>
               <p class="english">Baphuon</p>
               <p class="alias">
@@ -870,7 +1265,7 @@
                 >
               </p>
             </section>
-            <section class="site" id="elephant-terrace">
+<section class="site" id="elephant-terrace">
               <h3>战象平台</h3>
               <p class="english">Terrace of the Elephants</p>
               <p class="alias">
@@ -919,7 +1314,7 @@
                 >
               </p>
             </section>
-            <section class="site" id="leper-king">
+<section class="site" id="leper-king">
               <h3>癞王平台</h3>
               <p class="english">Terrace of the Leper King</p>
               <p class="alias">
@@ -968,138 +1363,7 @@
                 >
               </p>
             </section>
-          </section>
-          <section class="section">
-            <div class="section-header">
-              <span>DAY 02</span>
-              <h2>第二日｜寺院与水面</h2>
-            </div>
-            <section class="site" id="angkor-wat">
-              <h3>吴哥寺</h3>
-              <p class="english">Angkor Wat</p>
-              <p class="alias">
-                <strong>12世纪前半叶，吴哥寺风格</strong
-                ><br />苏耶跋摩二世（Suryavarman II）<br />毗湿奴印度教寺庙；后长期有佛教礼拜
-              </p>
-              <div class="site-grid">
-                <div>
-                  <p>
-                    <b>历史背景</b
-                    ><br />吴哥寺由苏耶跋摩二世主持兴建，是王国最宏大的寺庙建筑之一，原献给毗湿奴。环壕、围墙、层层回廊和五塔把须弥山宇宙观落实为可行走的空间；西向布局也使其格外醒目。长廊浮雕讲述《摩诃婆罗多》《罗摩衍那》与搅乳海，也刻下王室队伍。
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <b>游览价值</b
-                    ><br />建议将它分成两个尺度：先从护城河外看整体比例，再进回廊读一小段故事。早晨的人潮集中在日出，若只求光线可选择不同时间；真正值得留给自己的，是在浮雕前辨认叙事如何沿着行走展开。
-                  </p>
-                </div>
-                <div class="highlights">
-                  <b>值得细看的地方</b>
-                  <ul>
-                    <li>五塔与须弥山象征</li>
-                    <li>搅乳海浮雕</li>
-                    <li>毗湿奴与王室队列</li>
-                  </ul>
-                </div>
-                <p class="observe">
-                  <b>驻足细看 · 原创</b
-                  ><br />水中塔影被风轻轻打散，回廊里的故事仍在石上延续；日出只是翻开这座寺庙的第一页。
-                </p>
-              </div>
-              <p class="book-link">
-                伴听：<a
-                  href="https://read.douban.com/ebook/670270619/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >第8—14讲｜吴哥寺的历史、空间与浮雕</a
-                >
-              </p>
-              <figure class="site-photo">
-                <img width="1280" height="870" src="/angkor-photos/Angkor_Wat.webp" alt="莲花池前的吴哥寺塔群" loading="lazy" />
-                <figcaption>吴哥寺，照片：<a href="https://commons.wikimedia.org/wiki/File:Angkor_Wat.jpg" target="_blank" rel="noopener noreferrer">Bjørn Christian Tørrissen</a>，<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 4.0</a>。</figcaption>
-                <p class="photo-note"><b>现场辨认</b>：从寺前莲花池看，五塔并非平排同高；中央主塔与四角塔的高差，让寺庙的层层抬升在远处就已可读。</p>
-              </figure>
-              <p class="source-ref">
-                史实来源：<a
-                  href="https://whc.unesco.org/en/list/668"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >UNESCO · 吴哥</a
-                >
-                ·
-                <a
-                  href="https://whc.unesco.org/archive/advisory_body_evaluation/668.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >ICOMOS · 吴哥评估报告</a
-                >
-              </p>
-            </section>
-            <section class="site" id="ta-prohm">
-              <h3>塔布笼寺</h3>
-              <p class="english">Ta Prohm</p>
-              <p class="alias">
-                <strong>1186年起，巴戎风格</strong
-                ><br />阇耶跋摩七世<br />大乘佛教；供奉与王母相关的般若波罗蜜多形象
-              </p>
-              <div class="site-grid">
-                <div>
-                  <p>
-                    <b>历史背景</b
-                    ><br />塔布笼寺由阇耶跋摩七世为纪念母亲而建，碑铭记录其名为
-                    Rajavihara。它原是庞大的寺院体系的一部分，后来在树根、坍石与修复之间形成今日面貌。此地并不是“天然废墟”：保留部分树与建筑交缠的景观，是在结构安全和历史呈现间持续权衡的结果。
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <b>游览价值</b
-                    ><br />树根最吸睛，却也最容易让人忽略回廊、门楼与女神像。先看寺院的连续门框，再看根系如何压住石块；你会发现“丛林吞没古城”的印象背后，是材料、排水和保护选择共同塑成的现场。
-                  </p>
-                </div>
-                <div class="highlights">
-                  <b>值得细看的地方</b>
-                  <ul>
-                    <li>树根包覆石门的景观</li>
-                    <li>多重围墙与门楼轴线</li>
-                    <li>碑铭所见的寺院网络</li>
-                  </ul>
-                </div>
-                <p class="observe">
-                  <b>驻足细看 · 原创</b
-                  ><br />门框守着昔日的直线，树根长出今日的弧度；在两种形状相遇的地方，时间忽然可以被看见。
-                </p>
-              </div>
-              <p class="book-link">
-                伴听：<a
-                  href="https://read.douban.com/ebook/670270619/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >第27讲｜塔普伦寺（塔布笼寺）</a
-                >
-              </p>
-              <figure class="site-photo">
-                <img width="966" height="1280" src="/angkor-photos/17_-_Ta_Prohm.webp" alt="树根覆盖塔布笼寺门楼石墙" loading="lazy" />
-                <figcaption>塔布笼寺，照片：<a href="https://commons.wikimedia.org/wiki/File:17_-_Ta_Prohm.jpg" target="_blank" rel="noopener noreferrer">P. Hughes</a>，<a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 4.0</a>。</figcaption>
-                <p class="photo-note"><b>现场辨认</b>：先看门框原本的垂直线，再看根系如何跨过石块；修复现场保留的正是这种建筑与植物彼此牵制的关系。</p>
-              </figure>
-              <p class="source-ref">
-                史实来源：<a
-                  href="https://whc.unesco.org/en/list/668"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >UNESCO · 吴哥</a
-                >
-                ·
-                <a
-                  href="https://www.wmf.org/sites/default/files/article/pdfs/Preservation_Priorities_The_Angkor_Challenge.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >WMF · 吴哥保护报告</a
-                >
-              </p>
-            </section>
-            <section class="site" id="banteay-kdei">
+<section class="site" id="banteay-kdei">
               <h3>班黛克蒂</h3>
               <p class="english">Banteay Kdei</p>
               <p class="alias">
@@ -1110,13 +1374,13 @@
                 <div>
                   <p>
                     <b>历史背景</b
-                    ><br />班黛克蒂意为“僧侣的城堡”，在塔布笼寺以南、皇家浴池对面。APSARA资料将其断为阇耶跋摩七世晚12世纪所建的大乘佛教寺院，并指出它不只供礼拜，也与教育、文明活动有关。较脆弱的砂岩与结构问题，使许多空间呈现亲近而略显残破的尺度。
+                    ><br />班黛克蒂意为“僧侣的城堡”，在塔布隆寺以南、皇家浴池对面。APSARA资料将其断为阇耶跋摩七世晚12世纪所建的大乘佛教寺院，并指出它不只供礼拜，也与教育、文明活动有关。较脆弱的砂岩与结构问题，使许多空间呈现亲近而略显残破的尺度。
                   </p>
                 </div>
                 <div>
                   <p>
                     <b>游览价值</b
-                    ><br />它通常比塔布笼寺安静，适合练习看巴戎时期的门楼与佛教图像。穿过一重重入口时，留意空间从道路、前院到内院的递进；随后横过道路看皇家浴池，可把寺院生活与水利景观连成一组。
+                    ><br />它通常比塔布隆寺安静，适合练习看巴戎时期的门楼与佛教图像。穿过一重重入口时，留意空间从道路、前院到内院的递进；随后横过道路看皇家浴池，可把寺院生活与水利景观连成一组。
                   </p>
                 </div>
                 <div class="highlights">
@@ -1148,7 +1412,7 @@
                 >
               </p>
             </section>
-            <section class="site" id="srah-srang">
+<section class="site" id="srah-srang">
               <h3>皇家浴池</h3>
               <p class="english">Srah Srang</p>
               <p class="alias">
@@ -1197,186 +1461,7 @@
                 >
               </p>
             </section>
-          </section>
-          <section class="section">
-            <div class="section-header">
-              <span>DAY 03</span>
-              <h2>第三日｜远行</h2>
-            </div>
-            <section class="site" id="koh-ker">
-              <h3>高棉金字塔 Koh Ker／Prasat Thom</h3>
-              <p class="english">Koh Ker / Prasat Thom</p>
-              <p class="alias">
-                <strong>约928—944年，Koh Ker风格</strong
-                ><br />阇耶跋摩四世（Jayavarman IV）<br />湿婆信仰；中心神祇与林伽崇拜相关
-              </p>
-              <div class="site-grid">
-                <div>
-                  <p>
-                    <b>历史背景</b><br />Koh
-                    Ker曾在10世纪短暂成为高棉王都。UNESCO记载，阇耶跋摩四世于921年建立圣城，928—944年为唯一首都；Prasat
-                    Thom
-                    的七层阶台金字塔与吴哥平原寺院的横向展开很不相同。其短暂都城地位使遗址尤其珍贵：它显示王权、石材运输和造像生产可在新的政治中心迅速集中。
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <b>游览价值</b
-                    ><br />把它安排为远行日的主角。登高前先在底部看七层比例，登上后再看林地与遗址的关系；这样不会把它误读成孤立“金字塔”。路程较长、天气炎热，应预留体力与饮水，并按现场安全限制行动。
-                  </p>
-                </div>
-                <div class="highlights">
-                  <b>值得细看的地方</b>
-                  <ul>
-                    <li>七层阶台金字塔</li>
-                    <li>短暂首都的空间尺度</li>
-                    <li>林地中的多座 Koh Ker 遗迹</li>
-                  </ul>
-                </div>
-                <p class="observe">
-                  <b>驻足细看 · 原创</b
-                  ><br />登高后回看林地与散布的遗迹，让短暂都城的雄心在视野中展开。
-                </p>
-              </div>
-              <figure class="site-photo">
-                <img width="768" height="1024" src="/angkor-photos/Koh_Ker_sculpture_2006.webp" alt="Koh Ker 普拉萨特丹瑞的石象雕像" loading="lazy" />
-                <figcaption>Koh Ker 的普拉萨特丹瑞（Prasat Damrei）石象，照片：<a href="https://commons.wikimedia.org/wiki/File:Koh_Ker_sculpture_2006.jpg" target="_blank" rel="noopener noreferrer">fxru</a>，<a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 2.0</a>。</figcaption>
-                <p class="photo-note"><b>现场辨认</b>：这尊石象位于普拉萨特丹瑞，并非 Prasat Thom 的七层金字塔；它提示 Koh Ker 是一组分散在林地中的遗迹，而不只是一座阶台。</p>
-              </figure>
-              <p class="source-ref">
-                史实来源：<a
-                  href="https://whc.unesco.org/en/list/1667/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >UNESCO · Koh Ker</a
-                >
-              </p>
-            </section>
-            <section class="site" id="beng-mealea">
-              <h3>崩密列</h3>
-              <p class="english">Beng Mealea</p>
-              <p class="alias">
-                <strong>12世纪中叶，吴哥寺风格</strong
-                ><br />通常归苏耶跋摩二世时期，确切奉献与建造细节仍有讨论<br />印度教，见毗湿奴神话题材
-              </p>
-              <div class="site-grid">
-                <div>
-                  <p>
-                    <b>历史背景</b
-                    ><br />崩密列是一座规模很大的12世纪寺庙，布局与风格接近吴哥寺。APSARA将其列为苏耶跋摩二世时期的印度教遗址，外有壕沟，石块塌落仍保留复杂的回廊和门楼关系。部分浮雕呈现《罗摩衍那》与搅乳海，说明它与吴哥寺共享的并不只是外形。
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <b>游览价值</b
-                    ><br />它特别适合看“建筑变成遗址”的过程：坍落石材让门、廊、塔不再清晰分层。沿既定步道观察一处浮雕、一段回廊和一片壕沟，比急于寻找电影感机位更能读出原有秩序。
-                  </p>
-                </div>
-                <div class="highlights">
-                  <b>值得细看的地方</b>
-                  <ul>
-                    <li>吴哥寺式平面与护城壕</li>
-                    <li>搅乳海与《罗摩衍那》浮雕</li>
-                    <li>坍石与林木并置的结构景观</li>
-                  </ul>
-                </div>
-                <p class="observe">
-                  <b>驻足细看 · 原创</b
-                  ><br />沿既定步道前行，让坍石之间仍可辨认的门、廊与壕沟慢慢重组空间。
-                </p>
-              </div>
-              <figure class="site-photo">
-                <img width="1024" height="685" src="/angkor-photos/Beng_Mealea.webp" alt="林木与坍石之间的崩密列回廊" loading="lazy" />
-                <figcaption>崩密列，照片：<a href="https://commons.wikimedia.org/wiki/File:Beng_Mealea.jpg" target="_blank" rel="noopener noreferrer">Drew Hess</a>，<a href="https://creativecommons.org/licenses/by-sa/2.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 2.0</a>。</figcaption>
-                <p class="photo-note"><b>现场辨认</b>：照片里的墙、门与树干不在同一年代，却共同框出原有回廊；沿步道看这些残余的直线，较容易把坍塌后的石块重新读成空间。</p>
-              </figure>
-              <p class="source-ref">
-                史实来源：<a
-                  href="https://apsaraauthority.gov.kh/2021/08/05/beng-mealea/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >APSARA · 古迹资料</a
-                >
-                ·
-                <a
-                  href="https://whc.unesco.org/en/tentativelists/6462"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >UNESCO · 崩密列资料</a
-                >
-              </p>
-            </section>
-          </section>
-          <section class="section">
-            <div class="section-header">
-              <span>ALTERNATIVE</span>
-              <h2>第三日备选</h2>
-            </div>
-            <section class="site" id="banteay-srei">
-              <h3>女王宫</h3>
-              <p class="english">Banteay Srei</p>
-              <p class="alias">
-                <strong>967年奠基，10世纪末发展；班黛色雷风格</strong
-                ><br />拉真陀罗跋摩二世朝臣 Yajnavaraha；后为阇耶跋摩五世导师<br />湿婆信仰
-              </p>
-              <div class="site-grid">
-                <div>
-                  <p>
-                    <b>历史背景</b
-                    ><br />女王宫的现代名称并不意味着由女性建造；其碑铭显示，967年由拉真陀罗跋摩二世朝臣、后来成为阇耶跋摩五世导师的婆罗门学者
-                    Yajnavaraha
-                    创建，奉祀湿婆。寺体不大，却以粉红砂岩和极其细密的楣饰闻名。它说明高棉宗教建筑不只由国王直接主持，精英官员也能留下高度成熟的艺术作品。
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <b>游览价值</b
-                    ><br />这是读细节胜过看规模的一站。与其匆忙环拍，不如在一两面山花前停留，比较人物、植物卷草与框架的层次。粉红砂岩会随光线变化；请遵守围栏距离，让精细雕刻获得应有的保护。
-                  </p>
-                </div>
-                <div class="highlights">
-                  <b>值得细看的地方</b>
-                  <ul>
-                    <li>粉红砂岩的细密雕刻</li>
-                    <li>湿婆神话山花</li>
-                    <li>非王室直接主持的碑铭证据</li>
-                  </ul>
-                </div>
-                <p class="observe">
-                  <b>驻足细看 · 原创</b
-                  ><br />把镜头放下十秒，让极小的人物、卷草与边框显出砂岩里的深度。
-                </p>
-              </div>
-              <p class="book-link">
-                伴听：<a
-                  href="https://read.douban.com/ebook/670270619/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >第6讲｜班蒂斯蕾（女王宫）</a
-                >
-              </p>
-              <figure class="site-photo">
-                <img width="500" height="288" src="/angkor-photos/Banteay_Srei.webp" alt="女王宫粉红砂岩塔门与山花" loading="lazy" />
-                <figcaption>女王宫，照片：<a href="https://commons.wikimedia.org/wiki/File:Banteay_Srei.jpg" target="_blank" rel="noopener noreferrer">Michel Estermann</a>，<a href="https://creativecommons.org/licenses/by-sa/3.0/" target="_blank" rel="license noopener noreferrer">CC BY-SA 3.0</a>。</figcaption>
-                <p class="photo-note"><b>现场辨认</b>：粉红砂岩的色泽先让门楼显得柔和，靠近后才会看见山花、柱身与边框被分成极细的雕刻层次。</p>
-              </figure>
-              <p class="source-ref">
-                史实来源：<a
-                  href="https://whc.unesco.org/archive/advisory_body_evaluation/668.pdf"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >ICOMOS · 吴哥评估报告</a
-                >
-                ·
-                <a
-                  href="https://whc.unesco.org/en/list/668"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >UNESCO · 吴哥</a
-                >
-              </p>
-            </section>
-            <section class="site" id="banteay-samre">
+<section class="site" id="banteay-samre">
               <h3>班黛色玛</h3>
               <p class="english">Banteay Samre</p>
               <p class="alias">
@@ -1427,56 +1512,7 @@
                 >
               </p>
             </section>
-            <section class="site" id="preah-khan">
-              <h3>圣剑寺</h3>
-              <p class="english">Preah Khan</p>
-              <p class="alias">
-                <strong>1191年，巴戎风格</strong
-                ><br />阇耶跋摩七世<br />大乘佛教与王室祖先崇拜；兼容多种神祇
-              </p>
-              <div class="site-grid">
-                <div>
-                  <p>
-                    <b>历史背景</b
-                    ><br />圣剑寺据碑铭于1191年建成，位在击败占城军的决战地点，并献给阇耶跋摩七世的父亲；其名意为“神圣胜利之剑”。巨大围合内有寺院、神龛与多重门楼。碑铭与遗迹均显示它不只是礼拜场所，亦可能承担僧侣和王室学者教育功能。
-                  </p>
-                </div>
-                <div>
-                  <p>
-                    <b>游览价值</b
-                    ><br />它适合用“穿行”而非“打卡”来游览。穿过加鲁达、那伽与门楼，观察不同院落如何改变光线和声音；再把它与附近的北池、涅槃寺连起来看，能感到阇耶跋摩七世将胜利、纪念、学习与水利布置成网络。
-                  </p>
-                </div>
-                <div class="highlights">
-                  <b>值得细看的地方</b>
-                  <ul>
-                    <li>1191年碑铭与胜利纪念</li>
-                    <li>加鲁达守护的外墙</li>
-                    <li>多重门楼与复杂院落</li>
-                  </ul>
-                </div>
-                <p class="observe">
-                  <b>驻足细看 · 原创</b
-                  ><br />穿过加鲁达与门楼，让胜利纪念、父亲追思和寺院生活在同一座空间相遇。
-                </p>
-              </div>
-              <p class="source-ref">
-                史实来源：<a
-                  href="https://apsaraauthority.gov.kh/2026/05/07/great-architecture-and-a-symbol-of-victory/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >APSARA · 古迹资料</a
-                >
-                ·
-                <a
-                  href="https://whc.unesco.org/en/list/668"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  >UNESCO · 吴哥</a
-                >
-              </p>
-            </section>
-            <section class="site" id="neak-pean">
+<section class="site" id="neak-pean">
               <h3>涅槃寺</h3>
               <p class="english">Neak Pean</p>
               <p class="alias">
@@ -1535,7 +1571,8 @@
                 >
               </p>
             </section>
-          </section>
+            </div>
+          </details>
           <section class="sources">
             <h2>资料与延伸阅读</h2>
             <ol>
